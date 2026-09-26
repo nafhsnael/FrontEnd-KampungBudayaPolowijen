@@ -17,30 +17,23 @@ export default function LoginPage() {
   return (
     <main
       id="login-page"
-      className="relative min-h-screen w-full overflow-hidden bg-[#1f0d0a]"
+      className="relative min-h-screen w-full overflow-hidden bg-[#4A2920]"
     >
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/bg-polowijen.jpg')" }}
-        aria-hidden="true"
-      />
-      <div
-        className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(62,28,20,0.38),rgba(12,8,8,0.82))]"
-        aria-hidden="true"
-      />
-
-      <div className="absolute inset-0 opacity-90" aria-hidden="true">
-        <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,188,92,0.18)_0%,rgba(255,188,92,0)_22%,rgba(255,188,92,0)_78%,rgba(255,188,92,0.16)_100%)]" />
-        <div className="absolute inset-y-0 left-0 w-16 bg-[repeating-linear-gradient(90deg,rgba(255,220,166,0.12)_0,rgba(255,220,166,0.12)_2px,transparent_2px,transparent_20px)]" />
-        <div className="absolute inset-y-0 right-0 w-16 bg-[repeating-linear-gradient(90deg,rgba(255,220,166,0.12)_0,rgba(255,220,166,0.12)_2px,transparent_2px,transparent_20px)]" />
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-top bg-no-repeat opacity-40"
+          style={{ backgroundImage: "url('/images/login.jpg')" }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(155,61,50,0.74)_0%,rgba(155,61,50,0.42)_14%,rgba(155,61,50,0.18)_26%,rgba(74,41,32,0.7)_62%,rgba(74,41,32,1)_100%)]"
+          aria-hidden="true"
+        />
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-8">
-        <div className="relative w-full max-w-[410px] rounded-[38px] border-[10px] border-[#180e0d] bg-[#2b140f]/90 p-[2px] shadow-[0_40px_80px_rgba(0,0,0,0.7)]">
-          <div className="absolute inset-x-3 top-3 h-6 rounded-full bg-[#1a0f0d]/80" />
-          <div className="overflow-hidden rounded-[30px] bg-[#2b140f]/75 backdrop-blur-[1px]">
-            <LoginFormClient />
-          </div>
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-6">
+        <div className="w-full max-w-[420px]">
+          <LoginFormClient />
         </div>
       </div>
     </main>
