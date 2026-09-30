@@ -17,7 +17,7 @@ export default function LoginPage() {
   return (
     <main
       id="login-page"
-      className="relative min-h-screen w-full overflow-hidden bg-[#4A2920]"
+      className="relative min-h-screen w-full bg-[#4A2920]"
     >
       <div className="absolute inset-0 overflow-hidden">
         <div
@@ -31,8 +31,8 @@ export default function LoginPage() {
         />
       </div>
 
-      <div className="relative z-10 flex min-h-screen items-center justify-center px-4 py-6">
-        <div className="w-full max-w-[420px]">
+      <div className="relative z-10 flex min-h-screen items-center justify-center px-5 py-10 max-[760px]:items-start">
+        <div className="w-full max-w-131.25">
           <LoginFormClient />
         </div>
       </div>

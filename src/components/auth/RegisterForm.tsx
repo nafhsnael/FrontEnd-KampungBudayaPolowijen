@@ -100,10 +100,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
   };
 
   return (
-    <div className="w-full max-w-131.25 px-0 py-0">
-      <div className="space-y-6">
+    <div className="w-full max-w-105 px-0 py-0">
+      <div className="space-y-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-12 items-center justify-center overflow-hidden rounded-full bg-transparent">
+          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-transparent">
             <img
               src="/images/logo2.png"
               alt="Logo Kampung Budaya Polowijen"
@@ -114,20 +114,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
             <div className="text-[11px] font-medium tracking-wide text-stone-300">
               Kampung Budaya
             </div>
-            <div className="mt-1 text-2xl font-semibold text-white">
+            <div className="mt-1 text-lg font-bold tracking-[0.04em] text-white">
               Polowijen
             </div>
           </div>
         </div>
 
         <div className="space-y-2 text-white">
-          <h1 className="text-4xl font-bold leading-tight text-[#C49A4A]">
+          <h1 className="text-[28px] font-bold leading-[1.15] tracking-[-0.04em] text-[#C49A4A]">
             Selamat Datang
           </h1>
-          <p className="text-[15px] font-medium leading-snug text-white">
+          <p className="text-sm font-medium leading-5 text-white">
             Di Kampung Budaya Polowijen
           </p>
-          <p className="max-w-116.25 text-[15px] leading-snug text-stone-200">
+          <p className="max-w-82.5 text-xs leading-5 text-stone-200">
             Jelajahi kekayaan budaya, temukan cerita di balik setiap karya, dan
             dukung UMKM lokal
           </p>
@@ -145,7 +145,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#4A2920]">
-              <Mail size={19} aria-hidden="true" />
+              <Mail size={18} aria-hidden="true" />
             </span>
             <input
               id="login-email"
@@ -156,13 +156,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
               placeholder="Email"
               autoComplete="email"
               required
-              className="h-14 w-full rounded-full border border-transparent bg-[#FFFDF7] pl-14 pr-4 text-[15px] text-stone-800 placeholder:text-stone-500 focus:border-[#C49A4A] focus:outline-none"
+              className="w-full rounded-full border border-transparent bg-[#FFFDF7] py-3 pl-12 pr-4 text-sm text-stone-800 placeholder:text-stone-500 focus:border-[#C49A4A] focus:outline-none"
             />
           </div>
 
           <div className="relative">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#4A2920]">
-              <Lock size={19} aria-hidden="true" />
+              <Lock size={18} aria-hidden="true" />
             </span>
             <input
               id="login-password"
@@ -173,7 +173,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
               placeholder="Password"
               autoComplete="current-password"
               required
-              className="h-14 w-full rounded-full border border-transparent bg-[#FFFDF7] pl-14 pr-4 text-[15px] text-stone-800 placeholder:text-stone-500 focus:border-[#C49A4A] focus:outline-none"
+              className="w-full rounded-full border border-transparent bg-[#FFFDF7] py-3 pl-12 pr-4 text-sm text-stone-800 placeholder:text-stone-500 focus:border-[#C49A4A] focus:outline-none"
             />
           </div>
 
@@ -205,7 +205,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
             id="login-submit-btn"
             type="submit"
             disabled={isLoading}
-            className="flex h-15 w-full items-center justify-center gap-2 rounded-full bg-[#C49A4A] px-5 text-lg font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-[#C49A4A] px-5 py-3 text-base font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isLoading ? (
               <>
@@ -218,9 +218,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
           </button>
         </form>
 
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-1">
           <div className="h-px flex-1 bg-white/25" />
-          <span className="text-sm text-stone-200">atau masuk dengan</span>
+          <span className="text-[11px] text-stone-200">atau masuk dengan</span>
           <div className="h-px flex-1 bg-white/25" />
         </div>
 
@@ -229,7 +229,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
           type="button"
           onClick={handleGoogleLogin}
           disabled={isGoogleLoading}
-          className="flex h-15 w-full items-center justify-center gap-3 rounded-full bg-[#9B3D32] px-5 text-lg font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex w-full items-center justify-center gap-3 rounded-full bg-[#9B3D32] px-5 py-3 text-base font-bold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isGoogleLoading ? (
             <>
@@ -238,13 +238,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
             </>
           ) : (
             <>
-              <GoogleIcon className="h-5.5 w-5.5 shrink-0 text-white" />
+              <GoogleIcon className="h-5 w-5 shrink-0 text-white" />
               <span>Google</span>
             </>
           )}
         </button>
 
-        <p className="text-center text-sm text-stone-200">
+        <p className="pb-1 text-center text-[11px] text-stone-200">
           Belum punya akun?{" "}
           <Link
             href="/register"
