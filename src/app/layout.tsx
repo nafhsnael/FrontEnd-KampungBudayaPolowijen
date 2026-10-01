@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="id"
       className={`${plusJakartaSans.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-[var(--font-jakarta)]">
+      <body className="min-h-full flex flex-col font-(--font-jakarta)">
         {children}
       </body>
     </html>

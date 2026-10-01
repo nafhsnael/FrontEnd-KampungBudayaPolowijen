@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, Lock, Loader2 } from "lucide-react";
 
 interface LoginFormState {
@@ -104,9 +105,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
       <div className="space-y-6">
         <div className="flex items-center gap-3">
           <div className="flex h-14 w-12 items-center justify-center overflow-hidden rounded-full bg-transparent">
-            <img
+            <Image
               src="/images/logo2.png"
               alt="Logo Kampung Budaya Polowijen"
+              width={48}
+              height={56}
               className="h-full w-full object-contain"
             />
           </div>

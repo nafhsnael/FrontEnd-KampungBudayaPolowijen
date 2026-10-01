@@ -230,11 +230,7 @@ export default function RegisterPage() {
 									aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
 									className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-600 transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#9B3A32]"
 								>
-									{showPassword ? (
-										<EyeOff size={18} aria-hidden="true" />
-									) : (
-										<Eye size={18} aria-hidden="true" />
-									)}
+									{showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
 								</button>
 							</div>
 
@@ -258,71 +254,28 @@ export default function RegisterPage() {
 								<button
 									type="button"
 									onClick={() => setShowConfirmPassword((visible) => !visible)}
-									aria-label={
-										showConfirmPassword
-											? "Sembunyikan konfirmasi password"
-											: "Tampilkan konfirmasi password"
-									}
+									aria-label={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
 									className="absolute right-4 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-stone-600 transition hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#9B3A32]"
 								>
-									{showConfirmPassword ? (
-										<EyeOff size={18} aria-hidden="true" />
-									) : (
-										<Eye size={18} aria-hidden="true" />
-									)}
+									{showConfirmPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
 								</button>
 							</div>
 						</div>
 
 						{error && (
-							<p
-								role="alert"
-								className="mt-3 rounded-xl border border-red-300/40 bg-red-950/45 px-4 py-3 text-sm leading-5 text-rose-100"
-							>
+							<p role="alert" className="mt-3 rounded-xl border border-red-300/40 bg-red-950/45 px-4 py-3 text-sm leading-5 text-rose-100">
 								{error}
 							</p>
 						)}
 
-						<button
-							type="submit"
-							disabled={isLoading}
-							  className="mt-2 flex h-15 w-full items-center justify-center gap-2 rounded-full bg-[#C49A45] px-5 text-lg font-bold text-white transition-colors hover:bg-[#ad8438] disabled:cursor-not-allowed disabled:opacity-70"
-						>
-							{isLoading ? (
-								<>
-									<Loader2 size={19} className="animate-spin" aria-hidden="true" />
-									<span>Mendaftarkan...</span>
-								</>
-							) : (
-								"Daftar"
-							)}
+						<button type="submit" disabled={isLoading} className="mt-2 flex h-15 w-full items-center justify-center gap-2 rounded-full bg-[#C49A45] px-5 text-lg font-bold text-white transition-colors hover:bg-[#ad8438] disabled:cursor-not-allowed disabled:opacity-70">
+							{isLoading ? <><Loader2 size={19} className="animate-spin" aria-hidden="true" /><span>Mendaftarkan...</span></> : "Daftar"}
 						</button>
 					</form>
 
-					<div className="my-6 flex items-center gap-3">
-						<div className="h-px flex-1 bg-white/30" />
-						<span className="text-sm text-stone-200">atau masuk dengan</span>
-						<div className="h-px flex-1 bg-white/30" />
-					</div>
-
-					<button
-						type="button"
-						onClick={() => setError("Pendaftaran dengan Google belum tersedia.")}
-						className="flex h-15 w-full items-center justify-center gap-3 rounded-full bg-[#9B3A32] px-5 text-lg font-bold text-white transition hover:bg-[#873129] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E0BF6B]"
-					>
-						<GoogleIcon />
-						<span>Google</span>
-					</button>
-
-					<p className="mt-6 text-center text-sm leading-5 text-stone-200">
-						Sudah punya akun?{" "}
-						<Link
-							href="/login"
-							className="font-semibold text-[#E0BF6B] underline underline-offset-2 hover:text-[#f0d78e]"
-						>
-							Masuk sekarang
-						</Link>
-					</p>
+					<div className="my-6 flex items-center gap-3"><div className="h-px flex-1 bg-white/30" /><span className="text-sm text-stone-200">atau masuk dengan</span><div className="h-px flex-1 bg-white/30" /></div>
+					<button type="button" onClick={() => setError("Pendaftaran dengan Google belum tersedia.")} className="flex h-15 w-full items-center justify-center gap-3 rounded-full bg-[#9B3A32] px-5 text-lg font-bold text-white transition hover:bg-[#873129] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E0BF6B]"><GoogleIcon /><span>Google</span></button>
+					<p className="mt-6 text-center text-sm leading-5 text-stone-200">Sudah punya akun? <Link href="/login" className="font-semibold text-[#E0BF6B] underline underline-offset-2 hover:text-[#f0d78e]">Masuk sekarang</Link></p>
 				</div>
 			</div>
 		</main>
