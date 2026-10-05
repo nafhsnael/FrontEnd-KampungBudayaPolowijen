@@ -1,8 +1,7 @@
 // src/pages/admin/paket.tsx
 import Head from "next/head";
-import Link from "next/link";
-import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import AdminSidebar from "../../components/layout/AdminSidebar";
 
 type Paket = { id: number; nama: string; harga: string; gambar: string | null; isi: string[] };
 type Tab = "paket" | "rutin" | "event";
@@ -26,7 +25,6 @@ const EVENT = [
   ["20 April", "Peringatan Hari Kartini"], ["19 Juli", "Suroan, Nyekar Topeng Malang"], ["5 Oktober", "Festival Batik Polowijen"],
   ["25 Oktober", "Festival Topeng Malang"], ["21 Desember", "Peringatan Hari Ibu"],
 ];
-const MENU = [["Dashboard", "dashboard"], ["Umkm", "umkm"], ["Event", "events"], ["Paket Kunjungan", "paket"], ["Data User", "users"]];
 const BAYAR = [
   { g: "Transfer Bank", m: ["BCA", "Mandiri", "BRI"] },
   { g: "E-Wallet", m: ["GoPay", "OVO", "DANA"] },
@@ -34,7 +32,6 @@ const BAYAR = [
 ];
 
 export default function PaketAdmin() {
-  const router = useRouter();
   const [tab, setTab] = useState<Tab>("paket");
   const [daftar, setDaftar] = useState<Paket[]>(AWAL);
   const [layar, setLayar] = useState<Layar>("list");
@@ -42,7 +39,6 @@ export default function PaketAdmin() {
   const [keranjang, setKeranjang] = useState<number[]>([]);
   const [toast, setToast] = useState("");
   const [metode, setMetode] = useState("");
-  const [menu, setMenu] = useState(false);
   const [form, setForm] = useState<{ id: number | null; nama: string; harga: string; gambar: string | null; isi: string } | null>(null);
 
   useEffect(() => {
@@ -79,18 +75,10 @@ export default function PaketAdmin() {
         <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
       </Head>
 
-      <div className="topbar"><Logo s={30} /><button className="w" onClick={() => setMenu(!menu)}>Menu</button></div>
       <div className="app">
-        <aside className={menu ? "open" : ""}>
-          <div className="logo"><Logo s={46} /></div>
-          <nav>
-            {MENU.map(([l, h]) => (
-              <Link key={h} href={`/admin/${h}`} className={router.pathname === `/admin/${h}` ? "on" : ""}>{l}</Link>
-            ))}
-          </nav>
-        </aside>
+        <AdminSidebar activeRoute="paket" />
 
-        <main onClick={() => setMenu(false)}>
+        <main>
           <div className="top">
             <div>
               <h1>Paket Kunjungan</h1>
@@ -222,10 +210,6 @@ export default function PaketAdmin() {
       `}</style>
       <style jsx>{`
         .app { display:flex; min-height:100vh; }
-        aside { width:210px; flex:none; background:var(--brown); padding:28px 0; position:sticky; top:0; height:100vh; }
-        .logo { display:flex; justify-content:center; margin-bottom:34px; }
-        aside :global(a) { display:block; text-align:center; font:400 22px "Great Vibes",cursive; color:#fff; text-decoration:none; padding:9px 0; margin:6px 0; transition:background .3s,color .3s; }
-        aside :global(a.on) { background:var(--cream); color:var(--red); border-radius:999px 0 0 999px; margin-left:30px; }
         main { flex:1; min-width:0; padding:28px 32px 48px; }
         .top { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
         .tr { display:flex; align-items:center; gap:14px; }
@@ -237,7 +221,6 @@ export default function PaketAdmin() {
         button:disabled { opacity:.45; cursor:not-allowed; }
         button:focus-visible,input:focus-visible,textarea:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
         .pri { background:var(--gold); border-color:var(--gold); }
-        .w { border-color:#fff; color:#fff; }
         .full { width:100%; margin-top:18px; padding:11px; }
         .tabs { display:flex; gap:6px; border-bottom:1px solid var(--line); margin-bottom:22px; overflow-x:auto; }
         .tabs button { border:0; border-radius:0; padding:10px 16px; color:var(--muted); border-bottom:3px solid transparent; white-space:nowrap; box-shadow:none; }
@@ -281,18 +264,14 @@ export default function PaketAdmin() {
         label { display:block; font-weight:500; margin:10px 0 4px; }
         input:not([type=radio]),textarea { width:100%; font:inherit; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink); }
         .dacts { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
-        .topbar { display:none; }
         @media (max-width:760px) {
-          .app { display:block; }
-          .topbar { display:flex; align-items:center; justify-content:space-between; background:var(--brown); padding:10px 16px; position:sticky; top:env(safe-area-inset-top,0px); z-index:5; }
-          aside { position:fixed; inset:0 auto 0 0; z-index:10; transform:translateX(-100%); transition:transform .3s; width:230px; }
-          aside.open { transform:none; }
           main { padding:20px 16px 40px; }
           h1 { font-size:32px; }
           .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
           .dcard { grid-template-columns:1fr; }
           .row { flex-direction:column; gap:0; }
         }
+        @media (max-width:650px) { .app { display:block; } }
         @media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
       `}</style>
     </>
