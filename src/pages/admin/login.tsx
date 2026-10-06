@@ -27,6 +27,7 @@ export default function AdminLoginPage() {
 
 		setError("");
 		setIsLoading(true);
+		localStorage.setItem("user_role", "admin");
 		await router.push("/admin/dashboard");
 	};
 

@@ -48,7 +48,7 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
         .admin-sidebar nav { display:flex; flex-direction:column; gap:13px; }
         .admin-sidebar nav :global(a) { min-height:47px; display:flex; align-items:center; justify-content:center; margin-left:34px; padding:8px 12px; color:#fff8ec; text-align:center; text-decoration:none; font:400 22px/1.1 "Great Vibes",cursive; transition:background .2s,color .2s; }
         .admin-sidebar nav :global(a:hover) { color:#f1cf9f; }
-        .admin-sidebar nav :global(a.active) { margin-left:34px; border-radius:30px 0 0 30px; background:#fff8ec; color:#b3261e; }
+        .admin-sidebar nav :global(a.active) { margin-left:34px; border-radius:999px 0 0 999px; background:#FAF3E0; color:#9B3D32; }
         .admin-sidebar-scrim { display:none; }
         @media (max-width:850px) { .admin-sidebar { width:205px; flex-basis:205px; } }
         @media (max-width:650px) {

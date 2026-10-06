@@ -20,6 +20,7 @@ export default function UserLoginPage() {
 		const { data: payload } = await response.json();
 		const storage = data.rememberMe ? localStorage : sessionStorage;
 		storage.setItem("accessToken", payload.accessToken);
+		localStorage.setItem("user_role", "user");
 		await router.push("/user/umkm");
 	};
 
