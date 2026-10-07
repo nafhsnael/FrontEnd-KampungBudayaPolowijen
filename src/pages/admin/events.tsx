@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
-import { CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Archive, CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
 import AdminSidebar from "../../components/layout/AdminSidebar";
 import festivalkampung from "../../../image/festivalkampung.jpeg";
 import hariibu from "../../../image/hariibu.png";
@@ -225,6 +225,12 @@ export default function AdminEventsPage() {
     setPendingDelete(null);
   }
 
+  function moveNearEventToHistory() {
+    if (!nearEvent) return;
+    setEvents((items) => [...items, nearEvent]);
+    setNearEvent(null);
+  }
+
   const historyEvents = [...events].sort((first, second) => first.dateOrder - second.dateOrder);
 
   return (
@@ -246,8 +252,8 @@ export default function AdminEventsPage() {
                 <span>Tambah event</span>
               </button>
             </div>
-            {nearEvent && <article className="featured-event">
-              <CardActions onEdit={() => openEditForm(nearEvent)} onDelete={() => setPendingDelete(nearEvent)} />
+            {nearEvent ? <article className="featured-event">
+              <CardActions onEdit={() => openEditForm(nearEvent)} onDelete={() => setPendingDelete(nearEvent)} onMoveToHistory={moveNearEventToHistory} />
               <div className="featured-heading">
                 <h2>{nearEvent.name}</h2>
                 <p className="event-date"><CalendarDays size={14} aria-hidden="true" /> {nearEvent.date}</p>
@@ -265,7 +271,13 @@ export default function AdminEventsPage() {
                   </div>
                 </div>
               </div>
-            </article>}
+            </article> : (
+              <article className="featured-event featured-empty">
+                <CalendarDays size={28} aria-hidden="true" />
+                <h2>Belum ada event dalam waktu dekat</h2>
+                <p>Event berikutnya akan tampil di sini setelah ditambahkan.</p>
+              </article>
+            )}
           </section>
 
           <section className="history-section" aria-labelledby="history-heading">
@@ -361,6 +373,9 @@ export default function AdminEventsPage() {
         .featured-event:hover,.history-card:hover { translate:0 -4px; border-color:rgba(200,132,36,.55); box-shadow:0 10px 24px rgba(31,24,18,.16); }
         .featured-event { position:relative; min-height:286px; padding:17px 21px 20px; }
         .featured-heading { margin:0 0 15px; padding-right:86px; }
+        .featured-empty { min-height:286px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; color:var(--event-muted); }
+        .featured-empty h2 { margin:6px 0 0; color:#563327; font-size:15px; font-weight:600; }
+        .featured-empty p { margin:0; font-size:11px; }
         .featured-heading h2,.history-copy h3 { margin:0; color:#111; font-size:17px; line-height:1.35; font-weight:700; }
         .featured-heading p,.history-caption { margin:3px 0 0; color:#62534a; font-size:9px; line-height:1.5; }
         .event-date { width:fit-content; display:flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; background:#f3e7d3; color:#7e4b1e; font-size:10px; font-weight:600; }
@@ -467,16 +482,23 @@ function CardActions({
   className = "",
   onEdit,
   onDelete,
+  onMoveToHistory,
 }: {
   className?: string;
   onEdit: () => void;
   onDelete: () => void;
+  onMoveToHistory?: () => void;
 }) {
   return (
     <div className={`card-actions ${className}`}>
       <button type="button" onClick={onEdit} aria-label="Edit event" title="Edit event">
         <Pencil size={15} aria-hidden="true" />
       </button>
+      {onMoveToHistory && (
+        <button type="button" onClick={onMoveToHistory} aria-label="Pindahkan ke riwayat" title="Pindahkan ke riwayat">
+          <Archive size={15} aria-hidden="true" />
+        </button>
+      )}
       <button type="button" onClick={onDelete} aria-label="Hapus event" title="Hapus event">
         <Trash2 size={15} aria-hidden="true" />
       </button>
