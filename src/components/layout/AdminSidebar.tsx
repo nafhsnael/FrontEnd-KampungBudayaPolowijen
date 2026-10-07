@@ -4,12 +4,12 @@ import { useState } from "react";
 import logok from "../../../image/logok.png";
 
 const ITEMS = [
-  ["Dashboard", "dashboard"],
-  ["Umkm", "umkm"],
-  ["Event", "events"],
-  ["Paket Kunjungan", "paket"],
-  ["Data User", "users"],
-];
+  { label: "Dashboard", route: "dashboard", href: "/admin/dashboard" },
+  { label: "Umkm", route: "umkm", href: "/admin/umkm" },
+  { label: "Event", route: "events", href: "/admin/events" },
+  { label: "Paket Kunjungan", route: "paket", href: "/admin/paket" },
+  { label: "Data User", route: "users", href: "/admin/users" },
+] as const;
 
 export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -30,8 +30,14 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           <Image src={logok} alt="" width={49} height={72} />
         </Link>
         <nav aria-label="Navigasi admin">
-          {ITEMS.map(([label, route]) => (
-            <Link key={route} href={`/admin/${route}`} className={route === activeRoute ? "active" : ""} onClick={() => setMenuOpen(false)}>
+          {ITEMS.map(({ label, route, href }) => (
+            <Link
+              key={route}
+              href={href}
+              className={route === activeRoute ? "active" : ""}
+              aria-current={route === activeRoute ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
               {label}
             </Link>
           ))}

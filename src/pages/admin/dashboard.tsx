@@ -1,6 +1,6 @@
 import Head from "next/head";
-import { useState, type FormEvent } from "react";
-import { Building2, CalendarDays, MapPinned, UsersRound } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Building2, CalendarDays, MapPinned, Search, UsersRound } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 type UserStatus = "Aktif" | "Suspended";
@@ -33,9 +33,121 @@ const STATISTICS = [
   { label: "Paket Kunjungan", value: "50", icon: MapPinned, accent: "bg-[#F3EAE5] text-[#98634B]" },
 ];
 
+type DashboardData = {
+  users: UserRecord[];
+  statistics: typeof STATISTICS;
+};
+
+const DASHBOARD_CACHE_TTL = 60_000;
+const EMPTY_USERS: UserRecord[] = [];
+
+const dashboardCache: {
+  data: DashboardData | null;
+  expiresAt: number;
+  request: Promise<DashboardData> | null;
+} = {
+  data: null,
+  expiresAt: 0,
+  request: null,
+};
+
+async function fetchDashboardData(): Promise<DashboardData> {
+  // Mock data source until the dashboard API is available.
+  return {
+    users: INITIAL_USERS.map((user) => ({ ...user })),
+    statistics: STATISTICS,
+  };
+}
+
+function getCachedDashboardData(): Promise<DashboardData> {
+  if (dashboardCache.data && Date.now() < dashboardCache.expiresAt) {
+    return Promise.resolve(dashboardCache.data);
+  }
+
+  if (dashboardCache.request) {
+    return dashboardCache.request;
+  }
+
+  dashboardCache.request = fetchDashboardData()
+    .then((data) => {
+      dashboardCache.data = data;
+      dashboardCache.expiresAt = Date.now() + DASHBOARD_CACHE_TTL;
+      return data;
+    })
+    .finally(() => {
+      dashboardCache.request = null;
+    });
+
+  return dashboardCache.request;
+}
+
+function useDashboardData() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getCachedDashboardData()
+      .then((result) => {
+        if (isMounted) setData(result);
+      })
+      .catch((fetchError: unknown) => {
+        if (isMounted) {
+          setError(
+            fetchError instanceof Error
+              ? fetchError.message
+              : "Data dashboard gagal dimuat.",
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const updateUser = useCallback(
+    (updatedUser: UserRecord) => {
+      if (!data) return;
+
+      const nextData: DashboardData = {
+        ...data,
+        users: data.users.map((user) =>
+          user.id === updatedUser.id ? updatedUser : user,
+        ),
+      };
+      dashboardCache.data = nextData;
+      dashboardCache.expiresAt = Date.now() + DASHBOARD_CACHE_TTL;
+      setData(nextData);
+    },
+    [data],
+  );
+
+  return { data, isLoading, error, updateUser };
+}
+
 export default function AdminDashboardPage() {
-  const [users, setUsers] = useState<UserRecord[]>(INITIAL_USERS);
+  const { data, isLoading, error, updateUser } = useDashboardData();
+  const users = data?.users ?? EMPTY_USERS;
+  const statistics = data?.statistics ?? STATISTICS;
   const [draft, setDraft] = useState<UserRecord | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return users;
+
+    return users.filter((user) =>
+      `${user.role} ${user.email} ${user.username} ${user.access} ${user.status}`
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [searchTerm, users]);
 
   function openEdit(user: UserRecord) {
     setDraft({ ...user });
@@ -49,20 +161,18 @@ export default function AdminDashboardPage() {
     event.preventDefault();
     if (!draft) return;
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) => (user.id === draft.id ? { ...draft } : user)),
-    );
+    updateUser(draft);
     closeEdit();
   }
 
   function toggleStatus(userId: number) {
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.id === userId
-          ? { ...user, status: user.status === "Aktif" ? "Suspended" : "Aktif" }
-          : user,
-      ),
-    );
+    const user = users.find((currentUser) => currentUser.id === userId);
+    if (!user) return;
+
+    updateUser({
+      ...user,
+      status: user.status === "Aktif" ? "Suspended" : "Aktif",
+    });
   }
 
   return (
@@ -102,7 +212,7 @@ export default function AdminDashboardPage() {
               aria-label="Statistik ringkasan"
               className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6"
             >
-              {STATISTICS.map(({ label, value, icon: Icon, accent }) => (
+              {statistics.map(({ label, value, icon: Icon, accent }) => (
                 <article
                   key={label}
                   className="group rounded-2xl border border-[#E9E5DD] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6"
@@ -134,9 +244,22 @@ export default function AdminDashboardPage() {
                     <p className="mt-0.5 text-xs text-[#8A8178]">Ringkasan akun dan hak akses</p>
                   </div>
                 </div>
-                <span className="w-fit rounded-full bg-[#F5F4F0] px-3 py-1.5 text-xs font-medium text-[#71685F]">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label className="flex items-center gap-2 rounded-full border border-[#E9E5DD] bg-white px-3 py-2 text-[#827970] focus-within:border-[#C59B4E]">
+                    <Search size={14} aria-hidden="true" />
+                    <span className="sr-only">Cari user</span>
+                    <input
+                      type="search"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Cari user..."
+                      className="w-full bg-transparent text-xs text-[#342D27] outline-none placeholder:text-[#A59D94] sm:w-36"
+                    />
+                  </label>
+                  <span className="w-fit rounded-full bg-[#F5F4F0] px-3 py-1.5 text-xs font-medium text-[#71685F]">
                   {users.length} pengguna
-                </span>
+                  </span>
+                </div>
               </header>
 
               <div className="overflow-x-auto p-3 sm:p-5">
@@ -162,7 +285,25 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-8 text-center text-[#827970]">
+                          Memuat data user...
+                        </td>
+                      </tr>
+                    ) : error ? (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-8 text-center text-[#AD5145]" role="alert">
+                          {error}
+                        </td>
+                      </tr>
+                    ) : filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-8 text-center text-[#827970]">
+                          Tidak ada user yang cocok dengan pencarian.
+                        </td>
+                      </tr>
+                    ) : filteredUsers.map((user) => (
                       <tr key={user.id} className="transition-colors hover:bg-[#FAF9F6]">
                         <td className="whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3 text-[#9A9188]">{String(user.id).padStart(2, "0")}</td>
                         <td className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3 font-medium text-[#403932]">{user.role}</td>
