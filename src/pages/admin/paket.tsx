@@ -1,12 +1,13 @@
 // src/pages/admin/paket.tsx
 import Head from "next/head";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Pencil, X as IkonX } from "lucide-react";
 import AdminSidebar from "../../components/layout/AdminSidebar";
 
 type Paket = { id: number; nama: string; harga: string; gambar: string; isi: string[]; tambah: string[] };
 type Tab = "paket" | "jadwal";
 
-const PAKET: Paket[] = [
+const PAKET_AWAL: Paket[] = [
   { id: 1, nama: "Sambang Kampung", harga: "Rp 1 juta / 30 orang", gambar: "/images/paket/sambang-kampung.jpeg",
     isi: ["Selebihnya Rp 30 rb/orang", "Sinau budaya adat dan tradisi", "Sajian tari tradisi/topeng", "Bebas dokumentasi", "Demo membatik/topeng", "Kudapan jajanan lawas", "Omben-omben jamu/dawet"],
     tambah: ["Tambah makan sego berkat 20 rb/orang", "Tambah edukasi cek di paket Hasta Karya"] },
@@ -48,6 +49,10 @@ export default function PaketAdmin() {
   const [selesai, setSelesai] = useState(false);
   const [metode, setMetode] = useState("");
   const [f, setF] = useState({ nama: "", hp: "", tgl: "", jumlah: "" });
+  const [pakets, setPakets] = useState<Paket[]>(PAKET_AWAL);
+  const [editing, setEditing] = useState<Paket | null>(null);
+  const [pf, setPf] = useState({ nama: "", harga: "", gambar: "", isi: "", tambah: "" });
+  const [errGambar, setErrGambar] = useState("");
   const sx = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [sw, setSw] = useState(1400);   // lebar area carousel
@@ -62,10 +67,29 @@ export default function PaketAdmin() {
   const maxA = sw >= LEBAR_5 ? 2 : sw >= LEBAR_3 ? 1 : 0;           // jarak terjauh yang ditampilkan
   const sc = maxA === 2 ? Math.min(1, sw / LEBAR_PENUH) : 1;          // kecilkan lebar & jarak kartu kalau area kurang lebar
   const k = Math.min(1.15, Math.max(1, (sw / 2 - 115) / X[2]));      // renggangkan jarak kalau layar lebar
-  const n = PAKET.length;
+  const n = pakets.length;
   const geser = (d: number) => setIdx((i) => (i + d + n) % n);
   const siap = f.nama.trim() && f.hp.trim() && f.tgl && +f.jumlah > 0 && metode;
   const pindahTab = (t: Tab) => { setTab(t); setPilih(null); setSelesai(false); };
+  const bukaEdit = (p: Paket) => {
+  setEditing(p);
+  setPf({ nama: p.nama, harga: p.harga, gambar: p.gambar, isi: p.isi.join("\n"), tambah: p.tambah.join("\n") });
+  setErrGambar("");
+};
+const unggah = (file?: File) => {
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { setErrGambar("Pilih file gambar yang valid."); return; }
+  setErrGambar("");
+  setPf((c) => ({ ...c, gambar: URL.createObjectURL(file) }));
+};
+const baris = (t: string) => t.split("\n").map((x) => x.trim()).filter(Boolean);
+const simpan = (e: FormEvent) => {
+  e.preventDefault();
+  if (!editing || !pf.nama.trim() || !pf.harga.trim()) return;
+  const data: Paket = { id: editing.id, nama: pf.nama.trim(), harga: pf.harga.trim(), gambar: pf.gambar, isi: baris(pf.isi), tambah: baris(pf.tambah) };
+  setPakets((l) => l.map((p) => (p.id === data.id ? data : p)));
+  setEditing(null);
+};
 
   const swipeEnd = (x: number) => {
     if (sx.current === null) return;
@@ -85,7 +109,7 @@ export default function PaketAdmin() {
 
         <main className="event-main">
           <div className="tabs" role="tablist">
-            {([["paket", "Paket Kunjungan"], ["jadwal", "Jadwal Rutin dan Event"]] as [Tab, string][]).map(([t, l]) => (
+            {([["paket", "Paket Kunjungan"], ["jadwal", "Jadwal Rutin"]] as [Tab, string][]).map(([t, l]) => (
               <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => pindahTab(t)}>{l}</button>
             ))}
           </div>
@@ -100,7 +124,7 @@ export default function PaketAdmin() {
                   onTouchStart={(e) => { sx.current = e.touches[0].clientX; }}
                   onTouchEnd={(e) => swipeEnd(e.changedTouches[0].clientX)}
                 >
-                  {PAKET.map((p, i) => {
+                  {pakets.map((p, i) => {
                     let o = (((i - idx) % n) + n) % n;       // jarak dari tengah, berlaku untuk berapa pun jumlah paket
                     if (o > n / 2) o -= n;
                     const a = Math.abs(o);
@@ -129,7 +153,12 @@ export default function PaketAdmin() {
                         <div className="harga">{p.harga}</div>
                         <ul>{p.isi.map((x) => <li key={x}>{x}</li>)}</ul>
                         {p.tambah.length > 0 && <ul className="tb">{p.tambah.map((x) => <li key={x}>{x}</li>)}</ul>}
-                        <button className="ambil" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) { setPilih(p); setMetode(""); } }}>Dapatkan Paket</button>
+                        <div className="tombol">
+                          <button className="ambil" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) { setPilih(p); setMetode(""); } }}>Dapatkan Paket</button>
+                            <button className="edit" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) { bukaEdit(p); } }}>
+                              <Pencil size={15} aria-hidden="true" /> Edit paket
+                            </button>
+                        </div>
                       </article>
                     );
                   })}
@@ -196,6 +225,25 @@ export default function PaketAdmin() {
         </main>
       </div>
 
+      {editing && (
+  <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setEditing(null)}>
+    <form className="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-judul" onSubmit={simpan}>
+      <div className="dlg-head">
+        <h2 id="dlg-judul">Edit Paket</h2>
+        <button type="button" className="tutup" onClick={() => setEditing(null)} aria-label="Tutup"><IkonX size={20} /></button>
+      </div>
+      <label>Nama paket<input required value={pf.nama} onChange={(e) => setPf({ ...pf, nama: e.target.value })} /></label>
+      <label>Harga<input required value={pf.harga} onChange={(e) => setPf({ ...pf, harga: e.target.value })} /></label>
+      <label>Isi paket (satu baris satu poin)<textarea rows={5} value={pf.isi} onChange={(e) => setPf({ ...pf, isi: e.target.value })} /></label>
+      <label>Tambahan (satu baris satu poin)<textarea rows={2} value={pf.tambah} onChange={(e) => setPf({ ...pf, tambah: e.target.value })} /></label>
+      <label>{pf.gambar ? "Gambar telah ter-upload" : "Unggah gambar"}<input type="file" accept="image/*" onChange={(e) => unggah(e.currentTarget.files?.[0])} /></label>
+      {errGambar && <p className="err" role="alert">{errGambar}</p>}
+      {pf.gambar && <div className="pratinjau" style={{ backgroundImage: `url(${pf.gambar})` }} role="img" aria-label="Pratinjau gambar" />}
+      <button type="submit" className="simpan">Simpan perubahan</button>
+    </form>
+  </div>
+)}
+
       <style jsx global>{`
         :root {
           --event-brown:#4a2a1f;
@@ -250,11 +298,14 @@ export default function PaketAdmin() {
         .mid ul { color:#f0c862; }
         .tb { margin-top:8px; padding-top:8px; border-top:1px dashed currentColor; }
         .near ul { font-size:11px; }
-        .near .tb, .near .ambil { display:none; }
+        .near .tb, .near .tombol { display:none; }
         .far ul { font-size:11px; }
-        .far li:nth-child(n+4), .far .tb, .far .ambil, .far small { display:none; }
+        .far li:nth-child(n+4), .far .tb, .far .tombol, .far small { display:none; }
 
-        .ambil { margin-top:auto; align-self:stretch; background:var(--cream); color:var(--brown); border:1px solid var(--brown); border-radius:999px; padding:9px 0; font:600 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.2); transition:transform .2s; }
+        .ambil { margin-top:0; align-self:stretch; background:var(--cream); color:var(--brown); border:1px solid var(--brown); border-radius:999px; padding:9px 0; font:600 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.2); transition:transform .2s; }
+        .tombol { margin-top:auto; padding-top:14px; display:flex; flex-direction:column; gap:8px; }
+        .edit { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0; background:transparent; border:1px solid var(--cream); color:var(--cream); border-radius:999px; font:500 13px Poppins,sans-serif; cursor:pointer; transition:background .2s,color .2s; }
+        .edit:hover { background:var(--cream); color:var(--brown); }
         .mid .ambil { background:var(--gold); border-color:var(--gold); }
         .ambil:hover { transform:translateY(-1px); }
         .arr { flex:none; z-index:5; width:32px; height:32px; border-radius:50%; border:0; background:var(--brown); color:#fff; font-size:20px; line-height:1; cursor:pointer; transition:transform .2s; }
@@ -295,6 +346,22 @@ export default function PaketAdmin() {
         .opsi.on { border-color:var(--gold); background:#fdf1d4; }
         .center { text-align:center; }
         .ok { width:60px; height:60px; margin:0 auto 10px; border-radius:50%; background:var(--gold); color:var(--brown); font-size:30px; display:grid; place-items:center; }
+
+        /* ---------- Popup edit ---------- */
+.overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:18px; background:rgba(35,22,16,.56); animation:naik .2s ease both; }
+.dialog { width:min(460px,100%); max-height:92vh; overflow:auto; padding:23px; border-radius:14px; background:var(--cream); box-shadow:0 14px 45px rgba(0,0,0,.24); }
+.dlg-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.dlg-head h2 { margin:0; color:var(--brown); font:600 20px Poppins,sans-serif; }
+.tutup { display:grid; place-items:center; padding:5px; border:0; background:transparent; color:var(--brown); cursor:pointer; }
+.dialog label { display:block; margin:12px 0 0; color:var(--brown); font-size:12px; font-weight:500; }
+.dialog input:not([type=radio]), .dialog textarea { width:100%; margin-top:5px; padding:9px 10px; border:1px solid #d9c9b6; border-radius:7px; background:#fffdf9; color:var(--ink); font:400 13px Poppins,sans-serif; }
+.dialog input[type=file] { padding:7px; }
+.dialog input[type=file]::file-selector-button { margin-right:10px; padding:6px 10px; border:0; border-radius:5px; background:#f3e7d3; color:var(--brown); font:500 12px Poppins,sans-serif; cursor:pointer; }
+.dialog textarea { display:block; resize:vertical; }
+.dialog input:focus, .dialog textarea:focus { outline:2px solid #c88424; outline-offset:1px; }
+.pratinjau { height:150px; margin-top:9px; border-radius:8px; background:#6b4a3a center/cover; }
+.err { margin:7px 0 0; color:#b3261e; font-size:12px; }
+.simpan { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
 
         /* ---------- Responsif ---------- */
         @media (min-width:1200px) { .event-main { padding-right:38px; padding-left:28px; } }
