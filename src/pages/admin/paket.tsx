@@ -1,11 +1,13 @@
 // src/pages/admin/paket.tsx
 import Head from "next/head";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Pencil, X as IkonX } from "lucide-react";
+import { Pencil, Plus, Trash2, X as IkonX } from "lucide-react";
 import AdminSidebar from "../../components/layout/AdminSidebar";
 
 type Paket = { id: number; nama: string; harga: string; gambar: string; isi: string[]; tambah: string[] };
 type Tab = "paket" | "jadwal";
+type Jadwal = { id: number; hari: string; nama: string; jam: string; gambar: string; desc: string };
+const JF_KOSONG = { nama: "", hari: "", jam: "", desc: "", gambar: "" };
 
 const PAKET_AWAL: Paket[] = [
   { id: 1, nama: "Sambang Kampung", harga: "Rp 1 juta / 30 orang", gambar: "/images/paket/sambang-kampung.jpeg",
@@ -22,13 +24,13 @@ const PAKET_AWAL: Paket[] = [
   { id: 5, nama: "Hasta Karya", harga: "Mulai Rp 25 rb / orang", gambar: "/images/paket/lukis-topeng.jpeg",
     isi: ["Membatik topeng 100 rb/orang", "Membatik/ecoprint 50 rb/orang", "Melukis topeng 35 rb/orang", "Melukis jaranan 25 rb/orang", "Melukis anyaman bambu 25 rb/orang", "Melukis wayang 25 rb/orang"], tambah: [] },
 ];
-const JADWAL = [
-  { hari: "Jumat", nama: "Sarasehan Budaya Malang", jam: "19.00-21.00", gambar: "/images/paket/sambang-kampung.jpeg", desc: "Sarasehan budaya yang membahas Macapat, Topeng, dan Wayang." },
-  { hari: "Sabtu", nama: "Bantengan / Jaranan", jam: "09.00-13.00", gambar: "/images/paket/tarian1.jpeg", desc: "Sesi Bantengan dan Jaranan setiap Sabtu pagi." },
-  { hari: "Sabtu", nama: "Gladhi Tari Tradisi", jam: "13.00-15.00", gambar: "/images/paket/tarian.jpeg", desc: "Gladhi atau latihan tari tradisi bersama." },
-  { hari: "Sabtu", nama: "Hasta Karya / Liwetan", jam: "13.00-15.00", gambar: "/images/paket/lukis-topeng.jpeg", desc: "Kegiatan hasta karya dan liwetan bersama." },
-  { hari: "Sabtu", nama: "Gladhi Tari Topeng", jam: "15.00-17.00", gambar: "/images/paket/tarian.jpeg", desc: "Gladhi atau latihan tari Topeng Malang." },
-  { hari: "Sabtu", nama: "Sinau Budaya", jam: "15.00-17.00", gambar: "/images/paket/kupatan.jpeg", desc: "Sinau budaya, adat, dan tradisi Kampung Budaya Polowijen." },
+const JADWAL_AWAL: Jadwal[] = [
+  { id: 1,  hari: "Jumat", nama: "Sarasehan Budaya Malang", jam: "19.00-21.00", gambar: "/images/paket/sambang-kampung.jpeg", desc: "Sarasehan budaya yang membahas Macapat, Topeng, dan Wayang." },
+  { id: 2, hari: "Sabtu", nama: "Bantengan / Jaranan", jam: "09.00-13.00", gambar: "/images/paket/tarian1.jpeg", desc: "Sesi Bantengan dan Jaranan setiap Sabtu pagi." },
+  { id: 3, hari: "Sabtu", nama: "Gladhi Tari Tradisi", jam: "13.00-15.00", gambar: "/images/paket/tarian.jpeg", desc: "Gladhi atau latihan tari tradisi bersama." },
+  { id: 4, hari: "Sabtu", nama: "Hasta Karya / Liwetan", jam: "13.00-15.00", gambar: "/images/paket/lukis-topeng.jpeg", desc: "Kegiatan hasta karya dan liwetan bersama." },
+  { id: 5, hari: "Sabtu", nama: "Gladhi Tari Topeng", jam: "15.00-17.00", gambar: "/images/paket/tarian.jpeg", desc: "Gladhi atau latihan tari Topeng Malang." },
+  { id: 6, hari: "Sabtu", nama: "Sinau Budaya", jam: "15.00-17.00", gambar: "/images/paket/kupatan.jpeg", desc: "Sinau budaya, adat, dan tradisi Kampung Budaya Polowijen." },
 ];
 const BAYAR = ["BCA", "Mandiri", "BRI", "GoPay", "OVO", "DANA", "QRIS", "Bayar di lokasi"];
 
@@ -53,6 +55,11 @@ export default function PaketAdmin() {
   const [editing, setEditing] = useState<Paket | null>(null);
   const [pf, setPf] = useState({ nama: "", harga: "", gambar: "", isi: "", tambah: "" });
   const [errGambar, setErrGambar] = useState("");
+  const [jadwals, setJadwals] = useState<Jadwal[]>(JADWAL_AWAL);
+const [jEdit, setJEdit] = useState<Jadwal | "baru" | null>(null);
+const [jf, setJf] = useState(JF_KOSONG);
+const [jHapus, setJHapus] = useState<Jadwal | null>(null);
+const [errJ, setErrJ] = useState("");
   const sx = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [sw, setSw] = useState(1400);   // lebar area carousel
@@ -63,7 +70,7 @@ export default function PaketAdmin() {
     ro.observe(el);
     setSw(el.clientWidth);
     return () => ro.disconnect();
-  }, [tab, pilih]);
+  }, [tab]);
   const maxA = sw >= LEBAR_5 ? 2 : sw >= LEBAR_3 ? 1 : 0;           // jarak terjauh yang ditampilkan
   const sc = maxA === 2 ? Math.min(1, sw / LEBAR_PENUH) : 1;          // kecilkan lebar & jarak kartu kalau area kurang lebar
   const k = Math.min(1.15, Math.max(1, (sw / 2 - 115) / X[2]));      // renggangkan jarak kalau layar lebar
@@ -71,24 +78,57 @@ export default function PaketAdmin() {
   const geser = (d: number) => setIdx((i) => (i + d + n) % n);
   const siap = f.nama.trim() && f.hp.trim() && f.tgl && +f.jumlah > 0 && metode;
   const pindahTab = (t: Tab) => { setTab(t); setPilih(null); setSelesai(false); };
+  const tutupPesan = () => { setPilih(null); setSelesai(false); };
+
   const bukaEdit = (p: Paket) => {
-  setEditing(p);
-  setPf({ nama: p.nama, harga: p.harga, gambar: p.gambar, isi: p.isi.join("\n"), tambah: p.tambah.join("\n") });
-  setErrGambar("");
+    setEditing(p);
+    setPf({ nama: p.nama, harga: p.harga, gambar: p.gambar, isi: p.isi.join("\n"), tambah: p.tambah.join("\n") });
+    setErrGambar("");
+  };
+  const unggah = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { setErrGambar("Pilih file gambar yang valid."); return; }
+    setErrGambar("");
+    setPf((c) => ({ ...c, gambar: URL.createObjectURL(file) }));
+  };
+  const baris = (t: string) => t.split("\n").map((x) => x.trim()).filter(Boolean);
+  const simpan = (e: FormEvent) => {
+    e.preventDefault();
+    if (!editing || !pf.nama.trim() || !pf.harga.trim()) return;
+    const data: Paket = { id: editing.id, nama: pf.nama.trim(), harga: pf.harga.trim(), gambar: pf.gambar, isi: baris(pf.isi), tambah: baris(pf.tambah) };
+    setPakets((l) => l.map((p) => (p.id === data.id ? data : p)));
+    setEditing(null);
+  };
+
+  const bukaTambahJ = () => { setJf(JF_KOSONG); setErrJ(""); setJEdit("baru"); };
+const bukaEditJ = (j: Jadwal) => {
+  setJf({ nama: j.nama, hari: j.hari, jam: j.jam, desc: j.desc, gambar: j.gambar });
+  setErrJ("");
+  setJEdit(j);
 };
-const unggah = (file?: File) => {
+const unggahJ = (file?: File) => {
   if (!file) return;
-  if (!file.type.startsWith("image/")) { setErrGambar("Pilih file gambar yang valid."); return; }
-  setErrGambar("");
-  setPf((c) => ({ ...c, gambar: URL.createObjectURL(file) }));
+  if (!file.type.startsWith("image/")) { setErrJ("Pilih file gambar yang valid."); return; }
+  setErrJ("");
+  setJf((c) => ({ ...c, gambar: URL.createObjectURL(file) }));
 };
-const baris = (t: string) => t.split("\n").map((x) => x.trim()).filter(Boolean);
-const simpan = (e: FormEvent) => {
+const simpanJ = (e: FormEvent) => {
   e.preventDefault();
-  if (!editing || !pf.nama.trim() || !pf.harga.trim()) return;
-  const data: Paket = { id: editing.id, nama: pf.nama.trim(), harga: pf.harga.trim(), gambar: pf.gambar, isi: baris(pf.isi), tambah: baris(pf.tambah) };
-  setPakets((l) => l.map((p) => (p.id === data.id ? data : p)));
-  setEditing(null);
+  if (!jEdit || !jf.nama.trim() || !jf.hari) return;
+  const data = { nama: jf.nama.trim(), hari: jf.hari, jam: jf.jam.trim(), desc: jf.desc.trim(), gambar: jf.gambar };
+  if (jEdit === "baru") {
+    setJadwals((l) => [...l, { id: Date.now(), ...data }]);
+  } else {
+    const id = jEdit.id;
+    setJadwals((l) => l.map((j) => (j.id === id ? { id, ...data } : j)));
+  }
+  setJEdit(null);
+};
+const hapusJ = () => {
+  if (!jHapus) return;
+  const id = jHapus.id;
+  setJadwals((l) => l.filter((j) => j.id !== id));
+  setJHapus(null);
 };
 
   const swipeEnd = (x: number) => {
@@ -114,8 +154,8 @@ const simpan = (e: FormEvent) => {
             ))}
           </div>
 
-          <div className="view" key={tab + (pilih ? "p" : "") + selesai}>
-            {tab === "paket" && !pilih && (
+          <div className="view" key={tab}>
+            {tab === "paket" && (
               <div className="car">
                 <button className="arr" aria-label="Sebelumnya" onClick={() => geser(-1)}>‹</button>
                 <div
@@ -155,9 +195,9 @@ const simpan = (e: FormEvent) => {
                         {p.tambah.length > 0 && <ul className="tb">{p.tambah.map((x) => <li key={x}>{x}</li>)}</ul>}
                         <div className="tombol">
                           <button className="ambil" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) { setPilih(p); setMetode(""); } }}>Dapatkan Paket</button>
-                            <button className="edit" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) { bukaEdit(p); } }}>
-                              <Pencil size={15} aria-hidden="true" /> Edit paket
-                            </button>
+                          <button className="edit" tabIndex={mid ? 0 : -1} onClick={(e) => { e.stopPropagation(); if (mid) bukaEdit(p); }}>
+                            <Pencil size={15} aria-hidden="true" /> Edit paket
+                          </button>
                         </div>
                       </article>
                     );
@@ -167,42 +207,25 @@ const simpan = (e: FormEvent) => {
               </div>
             )}
 
-            {tab === "paket" && pilih && !selesai && (
-              <div className="pesan">
-                <button className="back" onClick={() => setPilih(null)}>← Kembali</button>
-                <div className="box">
-                  <h2>Pemesanan Paket {pilih.nama}</h2>
-                  <p className="hg">{pilih.harga}</p>
-                  <label>Nama pemesan<input value={f.nama} onChange={(e) => setF({ ...f, nama: e.target.value })} /></label>
-                  <label>No. WhatsApp<input inputMode="tel" value={f.hp} onChange={(e) => setF({ ...f, hp: e.target.value })} /></label>
-                  <div className="dua">
-                    <label>Tanggal kunjungan<input type="date" value={f.tgl} onChange={(e) => setF({ ...f, tgl: e.target.value })} /></label>
-                    <label>Jumlah peserta<input type="number" min={1} value={f.jumlah} onChange={(e) => setF({ ...f, jumlah: e.target.value })} /></label>
-                  </div>
-                  <p className="grp">Metode pembayaran</p>
-                  <div className="bayar">{BAYAR.map((m) => <label key={m} className={"opsi" + (metode === m ? " on" : "")}><input type="radio" name="b" checked={metode === m} onChange={() => setMetode(m)} />{m}</label>)}</div>
-                  <button className="utama" disabled={!siap} onClick={() => setSelesai(true)}>Konfirmasi pesanan</button>
-                </div>
-              </div>
-            )}
-
-            {tab === "paket" && pilih && selesai && (
-              <div className="box center">
-                <div className="ok">✓</div>
-                <h2>Pesanan diterima</h2>
-                <p>Paket {pilih.nama} untuk {f.jumlah} orang pada {f.tgl}, dibayar via {metode}.</p>
-                <button className="utama" onClick={() => { setPilih(null); setSelesai(false); }}>Kembali ke daftar paket</button>
-              </div>
-            )}
-
             {tab === "jadwal" && (
   <div className="jadwal">
     {["Jumat", "Sabtu"].map((hari) => (
       <section key={hari} className="jgrup">
-        <h2 className="jjudul">{hari}:</h2>
+        <div className="jhead">
+          <h2 className="jjudul">{hari}:</h2>
+          {hari === "Jumat" && (
+            <button type="button" className="tbh" onClick={bukaTambahJ}>
+              <Plus size={16} aria-hidden="true" /> Tambah Event
+            </button>
+          )}
+        </div>
         <div className="jlist">
-          {JADWAL.filter((j) => j.hari === hari).map((j, i) => (
-            <article className="jcard" key={j.nama} style={{ animationDelay: `${i * 80}ms` }}>
+          {jadwals.filter((j) => j.hari === hari).map((j, i) => (
+            <article className="jcard" key={j.id} style={{ animationDelay: `${i * 80}ms` }}>
+              <div className="jaksi">
+                <button type="button" aria-label={`Edit ${j.nama}`} onClick={() => bukaEditJ(j)}><Pencil size={14} aria-hidden="true" /></button>
+                <button type="button" aria-label={`Hapus ${j.nama}`} onClick={() => setJHapus(j)}><Trash2 size={14} aria-hidden="true" /></button>
+              </div>
               <div className="jfoto" style={{ backgroundImage: `url(${j.gambar})` }} role="img" aria-label={j.nama} />
               <div className="jcopy">
                 <h3>{j.nama}</h3>
@@ -220,27 +243,106 @@ const simpan = (e: FormEvent) => {
       </section>
     ))}
   </div>
-)}
-          </div>
+)}          </div>
         </main>
       </div>
 
+      {/* ---------- Popup pemesanan ---------- */}
+      {pilih && (
+        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && tutupPesan()}>
+          <div className="dialog" role="dialog" aria-modal="true" aria-labelledby="psn-judul">
+            {!selesai ? (
+              <>
+                <div className="dlg-head">
+                  <h2 id="psn-judul">Pemesanan Paket {pilih.nama}</h2>
+                  <button type="button" className="tutup" onClick={tutupPesan} aria-label="Tutup"><IkonX size={20} /></button>
+                </div>
+                <p className="hg">{pilih.harga}</p>
+                <label>Nama pemesan<input value={f.nama} onChange={(e) => setF({ ...f, nama: e.target.value })} /></label>
+                <label>No. WhatsApp<input inputMode="tel" value={f.hp} onChange={(e) => setF({ ...f, hp: e.target.value })} /></label>
+                <div className="dua">
+                  <label>Tanggal kunjungan<input type="date" value={f.tgl} onChange={(e) => setF({ ...f, tgl: e.target.value })} /></label>
+                  <label>Jumlah peserta<input type="number" min={1} value={f.jumlah} onChange={(e) => setF({ ...f, jumlah: e.target.value })} /></label>
+                </div>
+                <p className="grp">Metode pembayaran</p>
+                <div className="bayar">
+                  {BAYAR.map((m) => (
+                    <label key={m} className={"opsi" + (metode === m ? " on" : "")}>
+                      <input type="radio" name="b" checked={metode === m} onChange={() => setMetode(m)} />{m}
+                    </label>
+                  ))}
+                </div>
+                <button className="utama" disabled={!siap} onClick={() => setSelesai(true)}>Konfirmasi pesanan</button>
+              </>
+            ) : (
+              <div className="sukses">
+                <div className="ok">✓</div>
+                <h2>Pesanan diterima</h2>
+                <p>Paket {pilih.nama} untuk {f.jumlah} orang pada {f.tgl}, dibayar via {metode}.</p>
+                <button className="utama" onClick={tutupPesan}>Tutup</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ---------- Popup edit paket ---------- */}
       {editing && (
-  <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setEditing(null)}>
-    <form className="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-judul" onSubmit={simpan}>
+        <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setEditing(null)}>
+          <form className="dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-judul" onSubmit={simpan}>
+            <div className="dlg-head">
+              <h2 id="dlg-judul">Edit Paket</h2>
+              <button type="button" className="tutup" onClick={() => setEditing(null)} aria-label="Tutup"><IkonX size={20} /></button>
+            </div>
+            <label>Nama paket<input required value={pf.nama} onChange={(e) => setPf({ ...pf, nama: e.target.value })} /></label>
+            <label>Harga<input required value={pf.harga} onChange={(e) => setPf({ ...pf, harga: e.target.value })} /></label>
+            <label>Isi paket (satu baris satu poin)<textarea rows={5} value={pf.isi} onChange={(e) => setPf({ ...pf, isi: e.target.value })} /></label>
+            <label>Tambahan (satu baris satu poin)<textarea rows={2} value={pf.tambah} onChange={(e) => setPf({ ...pf, tambah: e.target.value })} /></label>
+            <label>{pf.gambar ? "Gambar telah ter-upload" : "Unggah gambar"}<input type="file" accept="image/*" onChange={(e) => unggah(e.currentTarget.files?.[0])} /></label>
+            {errGambar && <p className="err" role="alert">{errGambar}</p>}
+            {pf.gambar && <div className="pratinjau" style={{ backgroundImage: `url(${pf.gambar})` }} role="img" aria-label="Pratinjau gambar" />}
+            <button type="submit" className="simpan">Simpan perubahan</button>
+          </form>
+        </div>
+      )}
+
+      {/* ---------- Popup tambah / edit event ---------- */}
+{jEdit && (
+  <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setJEdit(null)}>
+    <form className="dialog" role="dialog" aria-modal="true" aria-labelledby="je-judul" onSubmit={simpanJ}>
       <div className="dlg-head">
-        <h2 id="dlg-judul">Edit Paket</h2>
-        <button type="button" className="tutup" onClick={() => setEditing(null)} aria-label="Tutup"><IkonX size={20} /></button>
+        <h2 id="je-judul">{jEdit === "baru" ? "Tambah Event" : "Edit Event"}</h2>
+        <button type="button" className="tutup" onClick={() => setJEdit(null)} aria-label="Tutup"><IkonX size={20} /></button>
       </div>
-      <label>Nama paket<input required value={pf.nama} onChange={(e) => setPf({ ...pf, nama: e.target.value })} /></label>
-      <label>Harga<input required value={pf.harga} onChange={(e) => setPf({ ...pf, harga: e.target.value })} /></label>
-      <label>Isi paket (satu baris satu poin)<textarea rows={5} value={pf.isi} onChange={(e) => setPf({ ...pf, isi: e.target.value })} /></label>
-      <label>Tambahan (satu baris satu poin)<textarea rows={2} value={pf.tambah} onChange={(e) => setPf({ ...pf, tambah: e.target.value })} /></label>
-      <label>{pf.gambar ? "Gambar telah ter-upload" : "Unggah gambar"}<input type="file" accept="image/*" onChange={(e) => unggah(e.currentTarget.files?.[0])} /></label>
-      {errGambar && <p className="err" role="alert">{errGambar}</p>}
-      {pf.gambar && <div className="pratinjau" style={{ backgroundImage: `url(${pf.gambar})` }} role="img" aria-label="Pratinjau gambar" />}
-      <button type="submit" className="simpan">Simpan perubahan</button>
+      <label>Nama event<input required value={jf.nama} onChange={(e) => setJf({ ...jf, nama: e.target.value })} /></label>
+      <label>Hari kegiatan
+        <select required value={jf.hari} onChange={(e) => setJf({ ...jf, hari: e.target.value })}>
+          <option value="" disabled>Pilih hari</option>
+          <option value="Jumat">Jumat</option>
+          <option value="Sabtu">Sabtu</option>
+        </select>
+      </label>
+      <label>Jam kegiatan (contoh: 09.00-13.00)<input value={jf.jam} onChange={(e) => setJf({ ...jf, jam: e.target.value })} /></label>
+      <label>Tentang kegiatan<textarea rows={3} value={jf.desc} onChange={(e) => setJf({ ...jf, desc: e.target.value })} /></label>
+      <label>{jf.gambar ? "Gambar telah ter-upload" : "Unggah gambar"}<input type="file" accept="image/*" onChange={(e) => unggahJ(e.currentTarget.files?.[0])} /></label>
+      {errJ && <p className="err" role="alert">{errJ}</p>}
+      {jf.gambar && <div className="pratinjau" style={{ backgroundImage: `url(${jf.gambar})` }} role="img" aria-label="Pratinjau gambar" />}
+      <button type="submit" className="simpan">{jEdit === "baru" ? "Simpan event" : "Simpan perubahan"}</button>
     </form>
+  </div>
+)}
+
+{/* ---------- Konfirmasi hapus event ---------- */}
+{jHapus && (
+  <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && setJHapus(null)}>
+    <div className="dialog kecil" role="alertdialog" aria-modal="true" aria-labelledby="jh-judul">
+      <h2 id="jh-judul" className="jh-judul">Hapus event?</h2>
+      <p className="jh-teks">Event “{jHapus.nama}” akan dihapus dari daftar.</p>
+      <div className="jh-aksi">
+        <button type="button" className="batal" onClick={() => setJHapus(null)}>Batal</button>
+        <button type="button" className="hapus" onClick={hapusJ}>Hapus</button>
+      </div>
+    </div>
   </div>
 )}
 
@@ -314,7 +416,7 @@ const simpan = (e: FormEvent) => {
         /* ---------- Jadwal rutin ---------- */
         .jadwal { display:flex; flex-direction:column; gap:60px; padding-top:30px; }
         .jlist { display:flex; flex-direction:column; gap:21px; }
-        .jjudul { margin:0 0 13px 12px; color:#563327; font:600 16px/1.4 Poppins,sans-serif; }
+        .jjudul { margin:0; color:#563327; font:600 16px/1.4 Poppins,sans-serif; }
         .jcard { display:grid; grid-template-columns:minmax(175px,28%) minmax(0,1fr) 155px; align-items:center; gap:12px 24px; min-height:210px; padding:18px 20px; background:var(--card); border:1px solid rgba(91,71,55,.25); border-radius:19px; box-shadow:0 1px 8px rgba(31,24,18,.42); transition:translate .28s ease,box-shadow .28s ease,border-color .28s ease; animation:naik .55s cubic-bezier(.2,.7,.2,1) both; }
         .jcard:hover { translate:0 -4px; border-color:rgba(200,132,36,.55); box-shadow:0 10px 24px rgba(31,24,18,.16); }
         .jfoto { height:156px; border-radius:17px; background:#6b4a3a center/cover; box-shadow:0 2px 8px rgba(0,0,0,.5); }
@@ -327,41 +429,52 @@ const simpan = (e: FormEvent) => {
         .jinfo { display:flex; flex-direction:column; }
         .jinfo span { color:#9d8978; font-size:10px; line-height:1.45; }
         .jinfo strong { color:#48291d; font-size:12px; font-weight:600; line-height:1.45; }
+        .jhead { display:flex; align-items:center; justify-content:space-between; margin:0 0 13px 12px; }
+.tbh { display:flex; align-items:center; gap:8px; padding:10px 18px; border:0; border-radius:8px; background:var(--brown); color:var(--cream); font:500 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25); transition:transform .2s; }
+.tbh:hover { transform:translateY(-1px); }
+.jcard { position:relative; }
+.jaksi { position:absolute; top:14px; right:20px; display:flex; gap:8px; z-index:2; }
+.jaksi button { display:grid; place-items:center; width:30px; height:30px; border:1px solid #d2c5b4; border-radius:7px; background:var(--cream); color:var(--brown); cursor:pointer; transition:background .2s,color .2s; }
+.jaksi button:hover { background:var(--brown); color:var(--cream); }
+.jstat { margin-top:22px; }
+.dialog select { display:block; width:100%; margin-top:5px; padding:9px 10px; border:1px solid #d9c9b6; border-radius:7px; background:#fffdf9; color:var(--ink); font:400 13px Poppins,sans-serif; }
+.dialog.kecil { width:min(400px,100%); }
+.jh-judul { margin:0 0 8px; color:var(--brown); font:600 17px Poppins,sans-serif; }
+.jh-teks { margin:0 0 18px; color:var(--event-muted); font-size:12px; }
+.jh-aksi { display:flex; justify-content:flex-end; gap:8px; }
+.jh-aksi button { padding:8px 16px; border-radius:6px; font:500 12px Poppins,sans-serif; cursor:pointer; }
+.batal { border:1px solid var(--line); background:var(--cream); color:var(--brown); }
+.hapus { border:0; background:#a9372c; color:#fff; }
 
-        /* ---------- Form pemesanan ---------- */
-        .pesan,.box { max-width:520px; margin:0 auto; }
-        .back,.utama { background:var(--brown); color:#fff; border:0; border-radius:999px; padding:9px 20px; font:600 13px Poppins,sans-serif; cursor:pointer; }
-        .back { background:none; color:var(--brown); border:1px solid var(--brown); margin-bottom:14px; }
-        .utama { width:100%; margin-top:18px; padding:12px; background:var(--gold); color:var(--brown); }
-        .utama:disabled { opacity:.45; cursor:not-allowed; }
-        .box { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; }
-        .box h2 { margin:0; font:700 19px Poppins,sans-serif; color:var(--brown); }
-        .hg { color:var(--gold2); font-weight:600; margin:2px 0 6px; }
-        label { display:block; font-weight:500; margin-top:12px; }
-        input:not([type=radio]) { display:block; width:100%; margin-top:4px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; font:inherit; color:var(--ink); }
+        /* ---------- Popup (dipakai pemesanan & edit) ---------- */
+        .overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:18px; background:rgba(35,22,16,.56); animation:naik .2s ease both; }
+        .dialog { width:min(460px,100%); max-height:92vh; overflow:auto; padding:23px; border-radius:14px; background:var(--cream); box-shadow:0 14px 45px rgba(0,0,0,.24); }
+        .dlg-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .dlg-head h2 { margin:0; color:var(--brown); font:600 20px Poppins,sans-serif; }
+        .tutup { display:grid; place-items:center; padding:5px; border:0; background:transparent; color:var(--brown); cursor:pointer; }
+        .dialog label { display:block; margin:12px 0 0; color:var(--brown); font-size:12px; font-weight:500; }
+        .dialog input:not([type=radio]), .dialog textarea { display:block; width:100%; margin-top:5px; padding:9px 10px; border:1px solid #d9c9b6; border-radius:7px; background:#fffdf9; color:var(--ink); font:400 13px Poppins,sans-serif; }
+        .dialog input[type=file] { padding:7px; }
+        .dialog input[type=file]::file-selector-button { margin-right:10px; padding:6px 10px; border:0; border-radius:5px; background:#f3e7d3; color:var(--brown); font:500 12px Poppins,sans-serif; cursor:pointer; }
+        .dialog textarea { resize:vertical; }
+        .dialog input:focus, .dialog textarea:focus { outline:2px solid #c88424; outline-offset:1px; }
+        .pratinjau { height:150px; margin-top:9px; border-radius:8px; background:#6b4a3a center/cover; }
+        .err { margin:7px 0 0; color:#b3261e; font-size:12px; }
+        .simpan { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
+
+        /* ---------- Isi popup pemesanan ---------- */
+        .hg { margin:0 0 4px; color:var(--gold2); font-size:13px; font-weight:600; }
         .dua { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .grp { font-weight:600; margin:16px 0 6px; color:var(--brown); }
+        .grp { margin:16px 0 6px; color:var(--brown); font-size:12px; font-weight:500; }
         .bayar { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
-        .opsi { display:flex; align-items:center; gap:8px; margin:0; padding:9px 12px; border:1px solid var(--line); border-radius:10px; cursor:pointer; transition:background .25s,border-color .25s; }
-        .opsi.on { border-color:var(--gold); background:#fdf1d4; }
-        .center { text-align:center; }
+        .dialog .opsi { display:flex; align-items:center; gap:8px; margin:0; padding:9px 12px; border:1px solid var(--line); border-radius:7px; background:#fffdf9; color:var(--ink); font-size:13px; cursor:pointer; transition:background .25s,border-color .25s; }
+        .dialog .opsi.on { border-color:var(--gold); background:#fdf1d4; }
+        .utama { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
+        .utama:disabled { opacity:.45; cursor:not-allowed; }
+        .sukses { text-align:center; }
         .ok { width:60px; height:60px; margin:0 auto 10px; border-radius:50%; background:var(--gold); color:var(--brown); font-size:30px; display:grid; place-items:center; }
-
-        /* ---------- Popup edit ---------- */
-.overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:18px; background:rgba(35,22,16,.56); animation:naik .2s ease both; }
-.dialog { width:min(460px,100%); max-height:92vh; overflow:auto; padding:23px; border-radius:14px; background:var(--cream); box-shadow:0 14px 45px rgba(0,0,0,.24); }
-.dlg-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.dlg-head h2 { margin:0; color:var(--brown); font:600 20px Poppins,sans-serif; }
-.tutup { display:grid; place-items:center; padding:5px; border:0; background:transparent; color:var(--brown); cursor:pointer; }
-.dialog label { display:block; margin:12px 0 0; color:var(--brown); font-size:12px; font-weight:500; }
-.dialog input:not([type=radio]), .dialog textarea { width:100%; margin-top:5px; padding:9px 10px; border:1px solid #d9c9b6; border-radius:7px; background:#fffdf9; color:var(--ink); font:400 13px Poppins,sans-serif; }
-.dialog input[type=file] { padding:7px; }
-.dialog input[type=file]::file-selector-button { margin-right:10px; padding:6px 10px; border:0; border-radius:5px; background:#f3e7d3; color:var(--brown); font:500 12px Poppins,sans-serif; cursor:pointer; }
-.dialog textarea { display:block; resize:vertical; }
-.dialog input:focus, .dialog textarea:focus { outline:2px solid #c88424; outline-offset:1px; }
-.pratinjau { height:150px; margin-top:9px; border-radius:8px; background:#6b4a3a center/cover; }
-.err { margin:7px 0 0; color:#b3261e; font-size:12px; }
-.simpan { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
+        .sukses h2 { margin:0; color:var(--brown); font:600 20px Poppins,sans-serif; }
+        .sukses p { margin:10px 0 0; color:var(--event-muted); font-size:13px; }
 
         /* ---------- Responsif ---------- */
         @media (min-width:1200px) { .event-main { padding-right:38px; padding-left:28px; } }
@@ -376,7 +489,9 @@ const simpan = (e: FormEvent) => {
           .jcard { grid-template-columns:130px minmax(0,1fr); gap:14px; padding:14px; }
           .jfoto { height:122px; }
           .jstat { grid-column:2; min-height:unset; flex-direction:row; gap:20px; padding:8px 10px; border-radius:10px; }
-          .dua,.bayar { grid-template-columns:1fr; }
+          .dua, .bayar { grid-template-columns:1fr; }
+          .jcopy h3 { padding-right:76px; }
+          .jstat { margin-top:0; }
         }
         @media (max-width:420px) { .event-main { padding-right:12px; padding-left:12px; } }
         @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
