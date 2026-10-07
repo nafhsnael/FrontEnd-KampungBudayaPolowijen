@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Archive, CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
 import AdminSidebar from "../../components/layout/AdminSidebar";
 import festivalkampung from "../../../image/festivalkampung.jpeg";
@@ -22,6 +22,60 @@ type EventItem = {
   capacity: string;
   price: string;
 };
+
+type EventCache = {
+  nearEvent: EventItem | null;
+  events: EventItem[];
+};
+
+const EVENT_CACHE_KEY = "kbp-admin-events-v1";
+
+function isEventItem(value: unknown): value is EventItem {
+  if (!value || typeof value !== "object") return false;
+  const event = value as Record<string, unknown>;
+  return typeof event.id === "number"
+    && typeof event.name === "string"
+    && typeof event.image === "string"
+    && typeof event.date === "string"
+    && typeof event.dateOrder === "number"
+    && typeof event.description === "string"
+    && typeof event.capacity === "string"
+    && typeof event.price === "string";
+}
+
+function isEventCache(value: unknown): value is EventCache {
+  if (!value || typeof value !== "object") return false;
+  const cache = value as Record<string, unknown>;
+  return (cache.nearEvent === null || isEventItem(cache.nearEvent))
+    && Array.isArray(cache.events)
+    && cache.events.every(isEventItem);
+}
+
+const eventCacheListeners = new Set<() => void>();
+
+function subscribeToEventCache(listener: () => void) {
+  eventCacheListeners.add(listener);
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === EVENT_CACHE_KEY || event.key === null) listener();
+  };
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    eventCacheListeners.delete(listener);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
+function getEventCacheSnapshot() {
+  try {
+    return window.localStorage.getItem(EVENT_CACHE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getEventCacheServerSnapshot() {
+  return "";
+}
 
 function dateOrderToInput(dateOrder: number) {
   const month = Math.floor(dateOrder / 100);
@@ -146,10 +200,46 @@ const PAST_EVENTS: EventItem[] = [
   },
 ];
 
+function useEventCache() {
+  const serializedCache = useSyncExternalStore(
+    subscribeToEventCache,
+    getEventCacheSnapshot,
+    getEventCacheServerSnapshot,
+  );
+  const cache = useMemo(() => {
+    try {
+      const cachedData: unknown = serializedCache ? JSON.parse(serializedCache) : null;
+      if (isEventCache(cachedData)) return cachedData;
+    } catch {
+      return { nearEvent: NEAR_EVENT, events: PAST_EVENTS };
+    }
+    return { nearEvent: NEAR_EVENT, events: PAST_EVENTS };
+  }, [serializedCache]);
+
+  function updateCache(update: EventCache | ((current: EventCache) => EventCache)) {
+    const nextCache = typeof update === "function" ? update(cache) : update;
+    const safeEvent = (event: EventItem): EventItem => event.image.startsWith("blob:")
+      ? { ...event, image: taritopeng.src }
+      : event;
+    const cacheToStore: EventCache = {
+      nearEvent: nextCache.nearEvent ? safeEvent(nextCache.nearEvent) : null,
+      events: nextCache.events.map(safeEvent),
+    };
+    try {
+      window.localStorage.setItem(EVENT_CACHE_KEY, JSON.stringify(cacheToStore));
+      eventCacheListeners.forEach((listener) => listener());
+    } catch (error) {
+      console.warn("Cache event admin tidak dapat disimpan.", error);
+    }
+  }
+
+  return [cache, updateCache] as const;
+}
+
 export default function AdminEventsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [nearEvent, setNearEvent] = useState<EventItem | null>(NEAR_EVENT);
-  const [events, setEvents] = useState<EventItem[]>(PAST_EVENTS);
+  const [eventCache, updateEventCache] = useEventCache();
+  const { nearEvent, events } = eventCache;
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<EventItem | null>(null);
   const [uploadError, setUploadError] = useState("");
@@ -202,12 +292,15 @@ export default function AdminEventsPage() {
     };
     if (editingEvent) {
       if (nearEvent?.id === editingEvent.id) {
-        setNearEvent(savedEvent);
+        updateEventCache((current) => ({ ...current, nearEvent: savedEvent }));
       } else {
-        setEvents((items) => items.map((item) => item.id === savedEvent.id ? savedEvent : item));
+        updateEventCache((current) => ({
+          ...current,
+          events: current.events.map((item) => item.id === savedEvent.id ? savedEvent : item),
+        }));
       }
     } else {
-      setEvents((items) => [...items, savedEvent]);
+      updateEventCache((current) => ({ ...current, events: [...current.events, savedEvent] }));
     }
     setForm({ name: "", date: "", description: "", capacity: "", price: "", image: "" });
     setEditingEvent(null);
@@ -218,20 +311,28 @@ export default function AdminEventsPage() {
   function deleteEvent() {
     if (!pendingDelete) return;
     if (nearEvent?.id === pendingDelete.id) {
-      setNearEvent(null);
+      updateEventCache((current) => ({ ...current, nearEvent: null }));
     } else {
-      setEvents((items) => items.filter((item) => item.id !== pendingDelete.id));
+      updateEventCache((current) => ({
+        ...current,
+        events: current.events.filter((item) => item.id !== pendingDelete.id),
+      }));
     }
     setPendingDelete(null);
   }
 
   function moveNearEventToHistory() {
     if (!nearEvent) return;
-    setEvents((items) => [...items, nearEvent]);
-    setNearEvent(null);
+    updateEventCache((current) => ({
+      nearEvent: null,
+      events: [...current.events, nearEvent],
+    }));
   }
 
-  const historyEvents = [...events].sort((first, second) => first.dateOrder - second.dateOrder);
+  const historyEvents = useMemo(
+    () => [...events].sort((first, second) => first.dateOrder - second.dateOrder),
+    [events],
+  );
 
   return (
     <>

@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
 import { Pencil, Plus, Search, Store, Trash2, X } from "lucide-react";
 import AdminSidebar from "../../components/layout/AdminSidebar";
 
@@ -20,6 +20,72 @@ const INITIAL_BUSINESSES: Business[] = [
   { id: 7, name: "Wedang", category: "Minuman", description: "Minuman tradisional." },
 ];
 
+const BUSINESS_CACHE_KEY = "kbp-admin-umkm-v1";
+
+function isBusiness(value: unknown): value is Business {
+  if (!value || typeof value !== "object") return false;
+  const business = value as Record<string, unknown>;
+  return typeof business.id === "number"
+    && typeof business.name === "string"
+    && typeof business.category === "string"
+    && typeof business.description === "string";
+}
+
+const businessCacheListeners = new Set<() => void>();
+
+function subscribeToBusinessCache(listener: () => void) {
+  businessCacheListeners.add(listener);
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === BUSINESS_CACHE_KEY || event.key === null) listener();
+  };
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    businessCacheListeners.delete(listener);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
+function getBusinessCacheSnapshot() {
+  try {
+    return window.localStorage.getItem(BUSINESS_CACHE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getBusinessCacheServerSnapshot() {
+  return "";
+}
+
+function useBusinessCache() {
+  const serializedCache = useSyncExternalStore(
+    subscribeToBusinessCache,
+    getBusinessCacheSnapshot,
+    getBusinessCacheServerSnapshot,
+  );
+  const businesses = useMemo(() => {
+    try {
+      const cachedData: unknown = serializedCache ? JSON.parse(serializedCache) : null;
+      if (Array.isArray(cachedData) && cachedData.every(isBusiness)) return cachedData;
+    } catch {
+      return INITIAL_BUSINESSES;
+    }
+    return INITIAL_BUSINESSES;
+  }, [serializedCache]);
+
+  function updateBusinesses(update: Business[] | ((current: Business[]) => Business[])) {
+    const nextBusinesses = typeof update === "function" ? update(businesses) : update;
+    try {
+      window.localStorage.setItem(BUSINESS_CACHE_KEY, JSON.stringify(nextBusinesses));
+      businessCacheListeners.forEach((listener) => listener());
+    } catch (error) {
+      console.warn("Cache UMKM admin tidak dapat disimpan.", error);
+    }
+  }
+
+  return [businesses, updateBusinesses] as const;
+}
+
 const BUILT_IN_CATEGORIES = ["Kriya", "Kuliner", "Minuman"];
 const EMPTY_FORM = { name: "", category: "Kriya", customCategory: "", description: "" };
 
@@ -28,17 +94,23 @@ function categoryClass(category: string) {
 }
 
 export default function AdminUMKMPage() {
-  const [businesses, setBusinesses] = useState(INITIAL_BUSINESSES);
+  const [businesses, updateBusinesses] = useBusinessCache();
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Business | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
-  const filteredBusinesses = businesses.filter((business) =>
-    `${business.name} ${business.category} ${business.description}`.toLowerCase().includes(search.trim().toLowerCase()),
+  const filteredBusinesses = useMemo(
+    () => businesses.filter((business) =>
+      `${business.name} ${business.category} ${business.description}`.toLowerCase().includes(search.trim().toLowerCase()),
+    ),
+    [businesses, search],
   );
-  const categoryCount = new Set(businesses.map((business) => business.category)).size;
+  const categoryCount = useMemo(
+    () => new Set(businesses.map((business) => business.category)).size,
+    [businesses],
+  );
 
   function openCreateForm() {
     setEditingId(null);
@@ -65,16 +137,16 @@ export default function AdminUMKMPage() {
     if (!savedBusiness.name || !savedBusiness.category) return;
 
     if (editingId !== null) {
-      setBusinesses((current) => current.map((business) => business.id === editingId ? { ...business, ...savedBusiness } : business));
+      updateBusinesses((current) => current.map((business) => business.id === editingId ? { ...business, ...savedBusiness } : business));
     } else {
-      setBusinesses((current) => [...current, { id: Date.now(), ...savedBusiness }]);
+      updateBusinesses((current) => [...current, { id: Date.now(), ...savedBusiness }]);
     }
     setFormOpen(false);
   }
 
   function deleteBusiness() {
     if (!deleteTarget) return;
-    setBusinesses((current) => current.filter((business) => business.id !== deleteTarget.id));
+    updateBusinesses((current) => current.filter((business) => business.id !== deleteTarget.id));
     setDeleteTarget(null);
   }
 
