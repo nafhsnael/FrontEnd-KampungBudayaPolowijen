@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kampung Budaya Polowijen
 
-## Getting Started
-
-First, run the development server:
+Frontend menggunakan Next.js App Router. Jalankan server pengembangan dengan:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Struktur route dan halaman
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Route dikelompokkan berdasarkan area menggunakan Route Groups. Nama direktori
+dalam tanda kurung seperti `(admin)` dan `(user)` hanya untuk organisasi dan
+tidak menjadi bagian dari URL.
 
-## Learn More
+```text
+app/
+├── (auth)/
+│   ├── login/
+│   │   ├── components/
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── LoginFormClient.tsx
+│   │   └── page.tsx
+│   └── register/
+│       ├── components/
+│       │   └── RegisterForm.tsx
+│       └── page.tsx
+├── (admin)/
+│   └── admin/
+│       ├── layout.tsx
+│       ├── page.tsx
+│       ├── dashboard/
+│       │   ├── components/DashboardClient.tsx
+│       │   └── page.tsx
+│       ├── data-user/
+│       │   ├── components/DataUserClient.tsx
+│       │   └── page.tsx
+│       ├── events/
+│       │   ├── components/EventsClient.tsx
+│       │   └── page.tsx
+│       ├── login/
+│       │   ├── components/AdminLoginClient.tsx
+│       │   └── page.tsx
+│       ├── logout/
+│       │   ├── components/LogoutClient.tsx
+│       │   └── page.tsx
+│       ├── paket/
+│       │   ├── components/PaketClient.tsx
+│       │   └── page.tsx
+│       ├── umkm/
+│       │   ├── components/UmkmClient.tsx
+│       │   └── page.tsx
+│       └── users/
+│           ├── components/UsersClient.tsx
+│           └── page.tsx
+├── (user)/
+│   ├── dashboard/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── favorite/
+│   │   ├── components/FavoriteClient.tsx
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── umkm/
+│   │   ├── components/
+│   │   │   ├── ProductCard.tsx
+│   │   │   └── UMKMPage.tsx
+│   │   ├── [id]/page.tsx
+│   │   └── page.tsx
+│   └── page.tsx
+├── components/
+│   ├── admin/AdminSidebar.tsx
+│   ├── auth/RouteGuard.tsx
+│   ├── layout/BottomNav.tsx
+│   └── ui/ConfirmModal.tsx
+├── lib/
+│   └── auth/session.ts
+├── services/
+│   └── auth.ts
+├── styles/
+│   └── globals.css
+├── public/
+│   └── images/
+├── types/
+│   └── umkm.ts
+├── favicon.ico
+└── layout.tsx
+```
 
-To learn more about Next.js, take a look at the following resources:
+URL publik adalah `/`, `/login`, `/register`, `/dashboard`, `/favorite`,
+`/umkm`, dan `/umkm/[id]`. URL area admin tetap `/admin`, `/admin/dashboard`,
+`/admin/data-user`, `/admin/events`, `/admin/login`, `/admin/logout`,
+`/admin/paket`, `/admin/umkm`, dan `/admin/users`. Login pengguna berhasil
+mengarahkan ke `/dashboard`; `/admin` mengarahkan ke `/admin/dashboard`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Route group seperti `(auth)`, `(admin)`, dan `(user)` hanya untuk organisasi
+dan tidak menjadi bagian dari URL. Komponen form login/register diletakkan di
+route auth masing-masing. UI khusus route admin dan favorit pengguna berada di
+folder `components/` di dalam route masing-masing; komponen lintas halaman
+diletakkan di `app/components/`.
+`app/layout.tsx` menangani root layout dan mengimpor CSS global dari
+`styles/globals.css`. Tipe bersama disimpan di `types/`; `lib/` dan `services/`
+disiapkan untuk utilitas dan integrasi layanan bersama.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Autentikasi dan otorisasi
 
-## Deploy on Vercel
+- Login memanggil endpoint backend `POST /api/auth/login` melalui
+  `services/auth.ts`. Respons harus menyertakan `data.accessToken` (atau
+  `accessToken`) dan role `admin`/`user` di objek respons. Login admin ditolak
+  jika backend tidak mengembalikan role `admin`; login pengguna memperlakukan
+  role yang tidak disertakan sebagai `user`.
+- `lib/auth/session.ts` menyimpan token dan role di `localStorage` saat
+  “Ingat saya” dipilih, atau di `sessionStorage` untuk sesi sementara.
+- `app/(admin)/admin/layout.tsx` membatasi semua route admin selain
+  `/admin/login` ke role `admin`. `app/(user)/dashboard/layout.tsx` dan
+  `app/(user)/favorite/layout.tsx` membatasi route tersebut ke role `user`.
+  Pengunjung tanpa sesi dialihkan ke halaman login; role yang tidak sesuai
+  dialihkan ke area login/role yang sesuai.
+- Logout admin membersihkan token dan role dari kedua storage.
+- Guard ini adalah proteksi navigasi sisi client, bukan batas keamanan server:
+  nilai Web Storage dapat diubah pengguna dan token dapat dicuri oleh XSS.
+  Backend wajib memvalidasi token dan role pada setiap endpoint yang
+  memerlukan autentikasi/otorisasi. Route katalog `/umkm` dan detailnya tetap
+  publik.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Gambar statis
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Simpan gambar yang dipakai aplikasi di `public/images/` dan referensikan
+melalui URL seperti `/images/logo.png` atau `/images/festivalkampung.jpeg`.
+Jangan impor gambar dari folder di luar `public/` untuk aset statis.
+
+## Migrasi Pages Router
+
+Untuk mengubah halaman lama:
+
+1. Buat direktori route di dalam `app` dari path halaman, misalnya
+   `pages/admin/events.tsx` menjadi `app/admin/events/page.tsx`.
+2. Pindahkan UI interaktif ke file komponen di direktori route (misalnya
+   `EventsClient.tsx`) dan tambahkan `"use client"` sebagai baris pertama.
+3. Ganti `next/router` dengan `next/navigation`. Letakkan metadata di route
+   Server Component, bukan di `next/head`.
+4. Pindahkan aset dari folder root `image/` ke `public/images/` dan ubah
+   referensinya menjadi URL absolut `/images/<nama-file>`.
+5. Hapus `pages/` setelah semua route dan referensinya dipindahkan.
