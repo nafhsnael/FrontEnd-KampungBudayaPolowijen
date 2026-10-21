@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../pages";
 
 :root {
   --font-jakarta: "Plus Jakarta Sans", sans-serif;
