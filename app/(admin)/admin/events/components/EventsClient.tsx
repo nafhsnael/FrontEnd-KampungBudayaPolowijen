@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
-import { Archive, CalendarDays, Pencil, Plus, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import { EventHistorySection, type EventItem, UpcomingEventSection } from "./EventSections";
 
 const festivalkampung = "/images/festivalkampung.jpeg";
 const hariibu = "/images/hariibu.png";
@@ -13,17 +14,6 @@ const mbatik = "/images/mbatik.png";
 const nyadran = "/images/nyadran.png";
 const nyekar = "/images/nyekar.png";
 const taritopeng = "/images/taritopeng.png";
-
-type EventItem = {
-  id: number;
-  name: string;
-  image: string;
-  date: string;
-  dateOrder: number;
-  description: string;
-  capacity: string;
-  price: string;
-};
 
 type EventCache = {
   nearEvent: EventItem | null;
@@ -342,72 +332,25 @@ export default function AdminEventsPage() {
         <AdminSidebar activeRoute="events" />
 
         <main className="event-main">
-          <section aria-labelledby="upcoming-heading">
-            <div className="section-heading-row">
-              <h1 id="upcoming-heading" className="section-title">Event Terdekat:</h1>
-              <button className="add-event" onClick={openCreateForm} title="Tambah event">
-                <Plus size={18} aria-hidden="true" />
-                <span>Tambah event</span>
-              </button>
-            </div>
-            {nearEvent ? <article className="featured-event">
-              <CardActions onEdit={() => openEditForm(nearEvent)} onDelete={() => setPendingDelete(nearEvent)} onMoveToHistory={moveNearEventToHistory} />
-              <div className="featured-heading">
-                <h2>{nearEvent.name}</h2>
-                <p className="event-date"><CalendarDays size={14} aria-hidden="true" /> {nearEvent.date}</p>
-              </div>
-              <div className="featured-content">
-                <div className="featured-image-frame">
-                  <Image className="featured-image" src={nearEvent.image} alt={nearEvent.name} width={800} height={500} unoptimized loading="eager" />
-                </div>
-                <div className="event-description">
-                  <h3>Tentang Kegiatan</h3>
-                  <p>{nearEvent.description}</p>
-                  <div className="featured-stats">
-                    <Info label="Kuota" value={nearEvent.capacity} />
-                    <Info label="Harga Tiket" value={nearEvent.price} />
-                  </div>
-                </div>
-              </div>
-            </article> : (
-              <article className="featured-event featured-empty">
-                <CalendarDays size={28} aria-hidden="true" />
-                <h2>Belum ada event dalam waktu dekat</h2>
-                <p>Event berikutnya akan tampil di sini setelah ditambahkan.</p>
-              </article>
-            )}
-          </section>
-
-          <section className="history-section" aria-labelledby="history-heading">
-            <h2 id="history-heading" className="section-title history-title">Riwayat Event:</h2>
-            <div className="history-list">
-              {historyEvents.map((event, index) => (
-                <article className="history-card" key={event.id} style={{ animationDelay: `${index * 80}ms` }}>
-                  <CardActions className="history-card-actions" onEdit={() => openEditForm(event)} onDelete={() => setPendingDelete(event)} />
-                  <div className="history-image-frame">
-                    <Image className="history-image" src={event.image} alt={event.name} width={500} height={350} unoptimized />
-                  </div>
-                  <div className="history-copy">
-                    <h3>{event.name}</h3>
-                    <p className="history-caption event-date"><CalendarDays size={13} aria-hidden="true" /> {event.date}</p>
-                    <h4>Tentang Kegiatan</h4>
-                    <p className="history-description">{event.description}</p>
-                  </div>
-                  <div className="history-stats">
-                    <Info label="Kuota" value={event.capacity} />
-                    <Info label="Harga Tiket" value={event.price} />
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
+          <UpcomingEventSection
+            event={nearEvent}
+            onCreate={openCreateForm}
+            onEdit={openEditForm}
+            onDelete={setPendingDelete}
+            onMoveToHistory={moveNearEventToHistory}
+          />
+          <EventHistorySection
+            events={historyEvents}
+            onEdit={openEditForm}
+            onDelete={setPendingDelete}
+          />
         </main>
       </div>
 
       {isFormOpen && (
         <div className="event-overlay" onMouseDown={(e) => e.target === e.currentTarget && setIsFormOpen(false)}>
           <form className="event-dialog" role="dialog" aria-modal="true" aria-labelledby="event-dialog-title" onSubmit={saveEvent}>
-            <div className="dialog-heading">
+            <div className="event-dialog-heading">
               <h2 id="event-dialog-title">{editingEvent ? "Edit Event" : "Tambah Event"}</h2>
               <button type="button" className="close-dialog" onClick={() => setIsFormOpen(false)} aria-label="Tutup">
                 <X size={20} />
@@ -460,7 +403,7 @@ export default function AdminEventsPage() {
         @keyframes event-rise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
         @keyframes event-fade { from { opacity:0; } to { opacity:1; } }
       `}</style>
-      <style jsx>{`
+      <style jsx global>{`
         .event-app { min-height:100vh; display:flex; }
         .event-main { min-width:0; flex:1; padding:31px 32px 40px; }
         .section-heading-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
@@ -518,8 +461,8 @@ export default function AdminEventsPage() {
         .delete-actions button { min-height:38px; padding:0 14px; border-radius:7px; font:500 12px Poppins,sans-serif; cursor:pointer; }
         .cancel-delete { border:1px solid #d9c9b6; background:transparent; color:var(--event-brown); }
         .confirm-delete { border:1px solid #a33a2d; background:#a33a2d; color:#fff; }
-        .dialog-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-        .dialog-heading h2 { margin:0; color:var(--event-brown); font-size:20px; font-weight:600; }
+        .event-dialog-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+        .event-dialog-heading h2 { margin:0; color:var(--event-brown); font-size:20px; font-weight:600; }
         .close-dialog { display:grid; place-items:center; padding:5px; border:0; background:transparent; color:var(--event-brown); cursor:pointer; }
         .event-dialog label { display:block; margin:12px 0 0; color:var(--event-brown); font-size:12px; font-weight:500; }
         .event-dialog input,.event-dialog textarea { width:100%; margin-top:5px; padding:9px 10px; border:1px solid #d9c9b6; border-radius:7px; background:#fffdf9; color:var(--event-ink); font:400 13px Poppins,sans-serif; }
@@ -569,37 +512,5 @@ export default function AdminEventsPage() {
         @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
       `}</style>
     </>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return <div className="event-info"><span>{label}</span><strong>{value}</strong></div>;
-}
-
-function CardActions({
-  className = "",
-  onEdit,
-  onDelete,
-  onMoveToHistory,
-}: {
-  className?: string;
-  onEdit: () => void;
-  onDelete: () => void;
-  onMoveToHistory?: () => void;
-}) {
-  return (
-    <div className={`card-actions ${className}`}>
-      <button type="button" onClick={onEdit} aria-label="Edit event" title="Edit event">
-        <Pencil size={15} aria-hidden="true" />
-      </button>
-      {onMoveToHistory && (
-        <button type="button" onClick={onMoveToHistory} aria-label="Pindahkan ke riwayat" title="Pindahkan ke riwayat">
-          <Archive size={15} aria-hidden="true" />
-        </button>
-      )}
-      <button type="button" onClick={onDelete} aria-label="Hapus event" title="Hapus event">
-        <Trash2 size={15} aria-hidden="true" />
-      </button>
-    </div>
   );
 }

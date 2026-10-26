@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { saveAuthSession } from "@/lib/auth/session";
-import { login } from "@/services/auth";
+import { adminLogin } from "@/services/auth";
 
 export default function AdminLoginClient() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function AdminLoginClient() {
     setError("");
     setIsLoading(true);
     try {
-      const session = await login(normalizedEmail, password);
+      const session = await adminLogin(normalizedEmail, password);
       if (session.role !== "admin") {
         throw new Error("Akun ini tidak memiliki akses administrator.");
       }

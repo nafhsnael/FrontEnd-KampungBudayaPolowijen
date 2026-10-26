@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Pencil, Plus, Trash2, X as IkonX } from "lucide-react";
+import { Pencil, X as IkonX } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import { JadwalSection, PaketTabsSection, type JadwalItem, type PaketTab } from "./PaketSections";
 
 type Paket = { id: number; nama: string; harga: string; gambar: string; isi: string[]; tambah: string[] };
-type Tab = "paket" | "jadwal";
-type Jadwal = { id: number; hari: string; nama: string; jam: string; gambar: string; desc: string };
 const JF_KOSONG = { nama: "", hari: "", jam: "", desc: "", gambar: "" };
 
 const PAKET_AWAL: Paket[] = [
@@ -24,7 +23,7 @@ const PAKET_AWAL: Paket[] = [
   { id: 5, nama: "Hasta Karya", harga: "Mulai Rp 25 rb / orang", gambar: "/images/paket/lukis-topeng.jpeg",
     isi: ["Membatik topeng 100 rb/orang", "Membatik/ecoprint 50 rb/orang", "Melukis topeng 35 rb/orang", "Melukis jaranan 25 rb/orang", "Melukis anyaman bambu 25 rb/orang", "Melukis wayang 25 rb/orang"], tambah: [] },
 ];
-const JADWAL_AWAL: Jadwal[] = [
+const JADWAL_AWAL: JadwalItem[] = [
   { id: 1,  hari: "Jumat", nama: "Sarasehan Budaya Malang", jam: "19.00-21.00", gambar: "/images/paket/sambang-kampung.jpeg", desc: "Sarasehan budaya yang membahas Macapat, Topeng, dan Wayang." },
   { id: 2, hari: "Sabtu", nama: "Bantengan / Jaranan", jam: "09.00-13.00", gambar: "/images/paket/tarian1.jpeg", desc: "Sesi Bantengan dan Jaranan setiap Sabtu pagi." },
   { id: 3, hari: "Sabtu", nama: "Gladhi Tari Tradisi", jam: "13.00-15.00", gambar: "/images/paket/tarian.jpeg", desc: "Gladhi atau latihan tari tradisi bersama." },
@@ -45,7 +44,7 @@ const LEBAR_PENUH = 1314;    // lebar yang dibutuhkan 5 kartu pada ukuran normal
 const LEBAR_3 = 860;         // minimum untuk 3 kartu (di bawahnya 1 kartu)
 
 export default function PaketAdmin() {
-  const [tab, setTab] = useState<Tab>("paket");
+  const [tab, setTab] = useState<PaketTab>("paket");
   const [idx, setIdx] = useState(2);
   const [pilih, setPilih] = useState<Paket | null>(null);
   const [selesai, setSelesai] = useState(false);
@@ -55,10 +54,10 @@ export default function PaketAdmin() {
   const [editing, setEditing] = useState<Paket | null>(null);
   const [pf, setPf] = useState({ nama: "", harga: "", gambar: "", isi: "", tambah: "" });
   const [errGambar, setErrGambar] = useState("");
-  const [jadwals, setJadwals] = useState<Jadwal[]>(JADWAL_AWAL);
-const [jEdit, setJEdit] = useState<Jadwal | "baru" | null>(null);
+  const [jadwals, setJadwals] = useState<JadwalItem[]>(JADWAL_AWAL);
+const [jEdit, setJEdit] = useState<JadwalItem | "baru" | null>(null);
 const [jf, setJf] = useState(JF_KOSONG);
-const [jHapus, setJHapus] = useState<Jadwal | null>(null);
+const [jHapus, setJHapus] = useState<JadwalItem | null>(null);
 const [errJ, setErrJ] = useState("");
   const sx = useRef<number | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -77,7 +76,7 @@ const [errJ, setErrJ] = useState("");
   const n = pakets.length;
   const geser = (d: number) => setIdx((i) => (i + d + n) % n);
   const siap = f.nama.trim() && f.hp.trim() && f.tgl && +f.jumlah > 0 && metode;
-  const pindahTab = (t: Tab) => { setTab(t); setPilih(null); setSelesai(false); };
+  const pindahTab = (t: PaketTab) => { setTab(t); setPilih(null); setSelesai(false); };
   const tutupPesan = () => { setPilih(null); setSelesai(false); };
 
   const bukaEdit = (p: Paket) => {
@@ -101,7 +100,7 @@ const [errJ, setErrJ] = useState("");
   };
 
   const bukaTambahJ = () => { setJf(JF_KOSONG); setErrJ(""); setJEdit("baru"); };
-const bukaEditJ = (j: Jadwal) => {
+const bukaEditJ = (j: JadwalItem) => {
   setJf({ nama: j.nama, hari: j.hari, jam: j.jam, desc: j.desc, gambar: j.gambar });
   setErrJ("");
   setJEdit(j);
@@ -139,16 +138,12 @@ const hapusJ = () => {
   };
 
   return (
-    <>
-      <div className="event-app">
+    <div className="paket-app">
+      <div className="paket-layout">
         <AdminSidebar activeRoute="paket" />
 
-        <main className="event-main">
-          <div className="tabs" role="tablist">
-            {([["paket", "Paket Kunjungan"], ["jadwal", "Jadwal Rutin"]] as [Tab, string][]).map(([t, l]) => (
-              <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? "on" : ""} onClick={() => pindahTab(t)}>{l}</button>
-            ))}
-          </div>
+        <main className="paket-main">
+          <PaketTabsSection activeTab={tab} onChange={pindahTab} />
 
           <div className="view" key={tab}>
             {tab === "paket" && (
@@ -204,42 +199,14 @@ const hapusJ = () => {
             )}
 
             {tab === "jadwal" && (
-  <div className="jadwal">
-    {["Jumat", "Sabtu"].map((hari) => (
-      <section key={hari} className="jgrup">
-        <div className="jhead">
-          <h2 className="jjudul">{hari}:</h2>
-          {hari === "Jumat" && (
-            <button type="button" className="tbh" onClick={bukaTambahJ}>
-              <Plus size={16} aria-hidden="true" /> Tambah Event
-            </button>
-          )}
-        </div>
-        <div className="jlist">
-          {jadwals.filter((j) => j.hari === hari).map((j, i) => (
-            <article className="jcard" key={j.id} style={{ animationDelay: `${i * 80}ms` }}>
-              <div className="jaksi">
-                <button type="button" aria-label={`Edit ${j.nama}`} onClick={() => bukaEditJ(j)}><Pencil size={14} aria-hidden="true" /></button>
-                <button type="button" aria-label={`Hapus ${j.nama}`} onClick={() => setJHapus(j)}><Trash2 size={14} aria-hidden="true" /></button>
-              </div>
-              <div className="jfoto" style={{ backgroundImage: `url(${j.gambar})` }} role="img" aria-label={j.nama} />
-              <div className="jcopy">
-                <h3>{j.nama}</h3>
-                <p className="jpill">Setiap {j.hari}, {j.jam} WIB</p>
-                <h4>Tentang Kegiatan</h4>
-                <p className="jdesc">{j.desc}</p>
-              </div>
-              <div className="jstat">
-                <div className="jinfo"><span>Hari</span><strong>{j.hari}</strong></div>
-                <div className="jinfo"><span>Jam</span><strong>{j.jam} WIB</strong></div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    ))}
-  </div>
-)}          </div>
+              <JadwalSection
+                schedules={jadwals}
+                onAdd={bukaTambahJ}
+                onEdit={bukaEditJ}
+                onDelete={setJHapus}
+              />
+            )}
+          </div>
         </main>
       </div>
 
@@ -341,9 +308,8 @@ const hapusJ = () => {
     </div>
   </div>
 )}
-
       <style jsx global>{`
-        :root {
+        .paket-app {
           --event-brown:#4a2a1f;
           --event-cream:#fff8ec;
           --event-card:#fffaf1;
@@ -353,18 +319,21 @@ const hapusJ = () => {
           --brown:var(--event-brown); --cream:var(--event-cream); --card:var(--event-card);
           --ink:var(--event-ink); --gold:var(--event-gold); --gold2:#7e4b1e;
           --line:#d9c9b6; --soft:#7a5a48;
+          min-height:100vh;
+          background:var(--event-cream);
+          color:var(--event-ink);
+          font:400 14px/1.55 Poppins,sans-serif;
         }
-        body { margin:0; background:var(--event-cream); color:var(--event-ink); font:400 14px/1.55 Poppins, sans-serif; }
-        *,*::before,*::after { box-sizing:border-box; }
+        .paket-app,.paket-app *,.paket-app *::before,.paket-app *::after { box-sizing:border-box; }
         @keyframes naik { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
       `}</style>
-      <style jsx>{`
-        .event-app { min-height:100vh; display:flex; }
-        .event-main { min-width:0; flex:1; padding:31px 32px 40px; position:relative; overflow:hidden; }
+      <style jsx global>{`
+        .paket-layout { min-height:100vh; display:flex; }
+        .paket-main { min-width:0; flex:1; padding:31px 32px 40px; position:relative; overflow:hidden; }
         .tabs { display:grid; grid-template-columns:repeat(2,1fr); border-bottom:1px solid var(--brown); margin-bottom:26px; }
         .tabs button { background:none; border:0; border-radius:12px 12px 0 0; margin-bottom:-1px; padding:12px 10px; font:600 15px Poppins,sans-serif; color:var(--brown); cursor:pointer; transition:background .3s,color .3s,opacity .3s; opacity:.7; }
         .tabs button.on { background:var(--brown); color:var(--cream); opacity:1; }
-        button:focus-visible,input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+        .paket-app button:focus-visible,.paket-app input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
         .view { animation:naik .45s ease both; }
 
         /* ---------- Carousel ---------- */
@@ -382,17 +351,17 @@ const hapusJ = () => {
         .foto { flex:none; height:150px; border-radius:17px; background:#6b4a3a center/cover; box-shadow:0 2px 8px rgba(0,0,0,.5); margin-bottom:12px; }
         .near .foto { height:110px; }
         .far .foto { height:90px; margin-bottom:10px; }
-        small { font-size:11px; opacity:.8; }
-        h3 { margin:0 0 4px; font:700 17px/1.25 Poppins,sans-serif; }
+        .paket-app small { font-size:11px; opacity:.8; }
+        .paket-app h3 { margin:0 0 4px; font:700 17px/1.25 Poppins,sans-serif; }
         .near h3 { font-size:15px; }
         .far h3 { font-size:13px; }
         .harga { font:600 14px/1.3 Poppins,sans-serif; margin-bottom:10px; }
         .near .harga { font-size:13px; }
         .far .harga { font-size:12px; margin-bottom:8px; }
 
-        ul { margin:0; padding:0; list-style:none; font-size:12px; line-height:1.45; color:var(--soft); }
-        li { position:relative; padding-left:13px; margin-bottom:3px; }
-        li::before { content:""; position:absolute; left:0; top:.6em; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; }
+        .paket-app ul { margin:0; padding:0; list-style:none; font-size:12px; line-height:1.45; color:var(--soft); }
+        .paket-app li { position:relative; padding-left:13px; margin-bottom:3px; }
+        .paket-app li::before { content:""; position:absolute; left:0; top:.6em; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; }
         .mid ul { color:#f0c862; }
         .tb { margin-top:8px; padding-top:8px; border-top:1px dashed currentColor; }
         .near ul { font-size:11px; }
@@ -473,14 +442,14 @@ const hapusJ = () => {
         .sukses p { margin:10px 0 0; color:var(--event-muted); font-size:13px; }
 
         /* ---------- Responsif ---------- */
-        @media (min-width:1200px) { .event-main { padding-right:38px; padding-left:28px; } }
+        @media (min-width:1200px) {         .paket-main { padding-right:38px; padding-left:28px; } }
         @media (max-width:850px) {
-          .event-main { padding:26px 20px 36px; }
+          .paket-main { padding:26px 20px 36px; }
           .jcard { grid-template-columns:minmax(140px,25%) minmax(0,1fr) 135px; gap:16px; padding:14px; }
         }
         @media (max-width:650px) {
-          .event-app { display:block; }
-          .event-main { padding:24px 16px 36px; }
+          .paket-layout { display:block; }
+          .paket-main { padding:24px 16px 36px; }
           .tabs button { font-size:13px; padding:10px 2px; }
           .jcard { grid-template-columns:130px minmax(0,1fr); gap:14px; padding:14px; }
           .jfoto { height:122px; }
@@ -489,9 +458,9 @@ const hapusJ = () => {
           .jcopy h3 { padding-right:76px; }
           .jstat { margin-top:0; }
         }
-        @media (max-width:420px) { .event-main { padding-right:12px; padding-left:12px; } }
+        @media (max-width:420px) { .paket-main { padding-right:12px; padding-left:12px; } }
         @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
       `}</style>
-    </>
+    </div>
   );
 }

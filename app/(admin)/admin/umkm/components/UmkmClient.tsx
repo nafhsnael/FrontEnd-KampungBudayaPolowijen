@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo, useState, useSyncExternalStore, type FormEvent } from "react";
-import { Pencil, Plus, Search, Store, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
-
-type Business = {
-  id: number;
-  name: string;
-  category: string;
-  description: string;
-};
+import {
+  UmkmDirectorySection,
+  UmkmHeroSection,
+  UmkmOverviewSection,
+  type Business,
+} from "./UmkmSections";
 
 const INITIAL_BUSINESSES: Business[] = [
   { id: 1, name: "Kriya Topeng Malang", category: "Kriya", description: "Pembuatan kerajinan Topeng Malangan." },
@@ -157,79 +156,28 @@ export default function AdminUMKMPage() {
         <AdminSidebar activeRoute="umkm" />
 
         <main className="umkm-main">
-          <div className="page-heading">
-            <div>
-              <h1>Kelola UMKM</h1>
-              <p className="page-description">Daftar usaha dan produk lokal yang tumbuh bersama komunitas.</p>
-            </div>
-          </div>
-
-          <section className="overview-strip" aria-label="Ringkasan UMKM">
-            <div className="overview-stat">
-              <span>UMKM terdaftar</span>
-              <strong>{String(businesses.length).padStart(2, "0")}</strong>
-            </div>
-            <div className="overview-divider" />
-            <div className="overview-stat category-stat">
-              <span>Kategori usaha</span>
-              <strong>{String(categoryCount).padStart(2, "0")}</strong>
-            </div>
-            <p className="overview-note">Mengangkat kriya, kuliner, dan minuman khas Polowijen.</p>
-            <button type="button" className="add-business-button" onClick={openCreateForm}>
-              <Plus size={17} strokeWidth={2.2} aria-hidden="true" />
-              <span>Tambah UMKM Baru</span>
-            </button>
-          </section>
-
-          <section className="directory-section" aria-labelledby="directory-heading">
-            <div className="directory-heading">
-              <div>
-                <p className="section-kicker">DIREKTORI USAHA</p>
-                <h2 id="directory-heading">Daftar UMKM</h2>
-              </div>
-              <label className="search-field">
-                <Search size={17} aria-hidden="true" />
-                <span className="sr-only">Cari UMKM</span>
-                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama atau kategori" />
-              </label>
-            </div>
-
-            <div className="business-table" role="table" aria-label="Daftar UMKM Kampung Budaya Polowijen">
-              <div className="table-header" role="row">
-                <span role="columnheader">No.</span>
-                <span role="columnheader">Nama UMKM</span>
-                <span role="columnheader">Jenis usaha</span>
-                <span role="columnheader">Aksi</span>
-              </div>
-              {filteredBusinesses.map((business, index) => (
-                <div className="business-row" role="row" key={business.id}>
-                  <span className="row-number" role="cell">{String(index + 1).padStart(2, "0")}</span>
-                  <div className="business-name-cell" role="cell">
-                    <span className="business-mark"><Store size={17} strokeWidth={1.8} aria-hidden="true" /></span>
-                    <span className="business-copy"><strong>{business.name}</strong><small>{business.description}</small></span>
-                  </div>
-                  <span className={`category-pill ${categoryClass(business.category)}`} role="cell">{business.category}</span>
-                  <div className="row-actions" role="cell">
-                    <button type="button" className="row-action edit-action" onClick={() => openEditForm(business)} aria-label={`Edit ${business.name}`} title="Edit">
-                      <Pencil size={14} aria-hidden="true" />
-                    </button>
-                    <button type="button" className="row-action delete-action" onClick={() => setDeleteTarget(business)} aria-label={`Hapus ${business.name}`} title="Hapus">
-                      <Trash2 size={14} aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {filteredBusinesses.length === 0 && <p className="empty-state">Tidak ada UMKM yang cocok dengan pencarian.</p>}
-            </div>
-            <p className="list-count">Menampilkan <strong>{filteredBusinesses.length}</strong> dari <strong>{businesses.length}</strong> UMKM</p>
-          </section>
+          <UmkmHeroSection />
+          <UmkmOverviewSection
+            businessCount={businesses.length}
+            categoryCount={categoryCount}
+            onAdd={openCreateForm}
+          />
+          <UmkmDirectorySection
+            businesses={filteredBusinesses}
+            totalCount={businesses.length}
+            search={search}
+            onSearchChange={setSearch}
+            onEdit={openEditForm}
+            onDelete={setDeleteTarget}
+            getCategoryClass={categoryClass}
+          />
         </main>
       </div>
 
       {formOpen && (
         <div className="umkm-overlay" onMouseDown={(event) => event.target === event.currentTarget && setFormOpen(false)}>
           <form className="umkm-dialog" role="dialog" aria-modal="true" aria-labelledby="umkm-dialog-title" onSubmit={saveBusiness}>
-            <div className="dialog-heading">
+            <div className="umkm-dialog-heading">
               <div><p className="section-kicker">DIREKTORI USAHA</p><h2 id="umkm-dialog-title">{editingId === null ? "Tambah UMKM" : "Edit UMKM"}</h2></div>
               <button type="button" className="close-dialog" onClick={() => setFormOpen(false)} aria-label="Tutup"><X size={19} /></button>
             </div>
@@ -262,7 +210,7 @@ export default function AdminUMKMPage() {
         body { margin:0; background:#faf7f1; color:var(--umkm-ink); font:400 14px/1.55 Poppins,sans-serif; }
         .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
       `}</style>
-      <style jsx>{`
+      <style jsx global>{`
         .umkm-shell { min-height:100vh; display:flex; }
         .umkm-main { width:min(100% - 234px,1440px); min-width:0; margin:0 auto; padding:42px clamp(24px,4vw,64px) 56px; }
         .page-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:26px; }
@@ -315,9 +263,9 @@ export default function AdminUMKMPage() {
         .umkm-overlay { position:fixed; inset:0; z-index:40; display:grid; place-items:center; overflow-y:auto; padding:20px; background:rgba(34,23,17,.52); animation:umkm-fade .18s ease both; }
         @keyframes umkm-fade { from { opacity:0; } to { opacity:1; } }
         .umkm-dialog { width:min(460px,100%); padding:25px; border:1px solid #ede3d7; border-radius:12px; background:#fffaf3; box-shadow:0 20px 60px rgba(0,0,0,.2); }
-        .dialog-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; }
-        .dialog-heading .section-kicker { margin-bottom:4px; }
-        .dialog-heading h2,.delete-dialog h2 { margin:0; color:var(--umkm-brown); font-size:20px; font-weight:600; }
+        .umkm-dialog-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; }
+        .umkm-dialog-heading .section-kicker { margin-bottom:4px; }
+        .umkm-dialog-heading h2,.delete-dialog h2 { margin:0; color:var(--umkm-brown); font-size:20px; font-weight:600; }
         .close-dialog { width:32px; height:32px; display:grid; place-items:center; border:0; border-radius:7px; background:transparent; color:var(--umkm-brown); cursor:pointer; }
         .close-dialog:hover { background:#f2e8dc; }
         .umkm-dialog > label { display:block; margin-top:13px; color:#614636; font-size:11px; font-weight:500; }

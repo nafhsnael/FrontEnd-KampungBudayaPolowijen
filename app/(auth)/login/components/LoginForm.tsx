@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Mail, Lock, Loader2 } from "lucide-react";
+import LoginWelcomeSection from "./LoginWelcomeSection";
 
 interface LoginFormState {
   email: string;
@@ -103,38 +103,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onGoogleLogin }) => {
   return (
     <div className="w-full max-w-131.25 px-0 py-0">
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-14 w-12 items-center justify-center overflow-hidden rounded-full bg-transparent">
-            <Image
-              src="/images/logo2.png"
-              alt="Logo Kampung Budaya Polowijen"
-              width={48}
-              height={56}
-              className="h-full w-full object-contain"
-            />
-          </div>
-          <div className="leading-none text-white">
-            <div className="text-[11px] font-medium tracking-wide text-stone-300">
-              Kampung Budaya
-            </div>
-            <div className="mt-1 text-2xl font-semibold text-white">
-              Polowijen
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2 text-white">
-          <h1 className="text-4xl font-bold leading-tight text-[#C49A4A]">
-            Selamat Datang
-          </h1>
-          <p className="text-[15px] font-medium leading-snug text-white">
-            Di Kampung Budaya Polowijen
-          </p>
-          <p className="max-w-116.25 text-[15px] leading-snug text-stone-200">
-            Jelajahi kekayaan budaya, temukan cerita di balik setiap karya, dan
-            dukung UMKM lokal
-          </p>
-        </div>
+        <LoginWelcomeSection />
 
         {error && (
           <div

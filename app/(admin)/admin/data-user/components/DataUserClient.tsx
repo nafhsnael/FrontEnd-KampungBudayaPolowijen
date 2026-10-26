@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Filter, Pencil, Search, ShieldCheck, UserRound, X } from "lucide-react";
+import { Pencil, UserRound, X } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import DataUserHeaderSection from "./DataUserHeaderSection";
+import DataUserSummarySection from "./DataUserSummarySection";
 
 type UserStatus = "Aktif" | "Suspended";
 type UserAccess = "admin" | "operator" | "viewer";
@@ -232,69 +234,19 @@ export default function AdminDataUserPage() {
 
         <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <section className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-[#E8DDD1] bg-[#FDF8F2] shadow-md">
-            <header className="border-b border-[#E8DDD1] px-5 py-5 sm:px-7 sm:py-6">
-              <div className="mb-2 flex items-center gap-2 text-[#9B3D32]">
-                <ShieldCheck size={18} aria-hidden="true" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.16em]">
-                  Manajemen pengguna
-                </span>
-              </div>
-              <h1 className="text-2xl font-bold tracking-wide text-[#3D2018]">Data User</h1>
-              <p className="mt-1 text-sm text-[#75685F]">
-                Kelola identitas, hak akses, dan status pengguna.
-              </p>
-
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <label className="flex min-w-0 items-center gap-2.5 rounded-full border border-[#D1C7BD] bg-white px-4 py-2.5 text-[#8A7B70] shadow-sm focus-within:border-[#C49A4A] sm:max-w-sm sm:flex-1">
-                  <Search size={16} aria-hidden="true" />
-                  <span className="sr-only">Cari user</span>
-                  <input
-                    type="search"
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Cari nama, email, username..."
-                    className="min-w-0 flex-1 bg-transparent text-xs text-[#3D2018] outline-none placeholder:text-[#A89A8D]"
-                  />
-                </label>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Filter size={15} className="text-[#8A7B70]" aria-hidden="true" />
-                  {(["Semua", "Aktif", "Suspended"] as const).map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setStatusFilter(status)}
-                      aria-pressed={statusFilter === status}
-                      className={`rounded-full px-3 py-1.5 text-[11px] font-medium transition ${
-                        statusFilter === status
-                          ? "bg-[#C59B4E] text-white"
-                          : "bg-white text-[#6F6259] hover:bg-[#F0E8DE]"
-                      }`}
-                    >
-                      {status}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </header>
-
-            <div className="flex items-center justify-between px-5 py-3 sm:px-7">
-              <p className="text-xs text-[#75685F]">
-                {isLoading ? "Memuat data user..." : `${filteredUsers.length} user ditampilkan`}
-              </p>
-              <p className="text-xs text-[#8A7B70]">{users.length} total user</p>
-            </div>
-
-            {cacheWarning && (
-              <p className="mx-5 mb-3 rounded-xl bg-amber-50 px-4 py-2.5 text-xs text-amber-800 sm:mx-7" role="status">
-                {cacheWarning}
-              </p>
-            )}
-            {error && (
-              <p className="mx-5 mb-3 rounded-xl bg-rose-50 px-4 py-2.5 text-xs text-rose-700 sm:mx-7" role="alert">
-                {error}
-              </p>
-            )}
+            <DataUserHeaderSection
+              searchTerm={searchTerm}
+              statusFilter={statusFilter}
+              onSearchChange={setSearchTerm}
+              onStatusFilterChange={setStatusFilter}
+            />
+            <DataUserSummarySection
+              visibleCount={filteredUsers.length}
+              totalCount={users.length}
+              isLoading={isLoading}
+              cacheWarning={cacheWarning}
+              error={error}
+            />
 
             <div className="space-y-2.5 px-4 pb-5 sm:px-7 sm:pb-7">
               {!isLoading && !error && filteredUsers.map((user) => (

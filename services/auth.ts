@@ -26,9 +26,24 @@ export async function login(
   email: string,
   password: string
 ): Promise<LoginResult> {
+  return loginAtEndpoint(email, password, "/api/auth/login");
+}
+
+export async function adminLogin(
+  email: string,
+  password: string
+): Promise<LoginResult> {
+  return loginAtEndpoint(email, password, "/api/auth/admin/login");
+}
+
+async function loginAtEndpoint(
+  email: string,
+  password: string,
+  endpoint: string
+): Promise<LoginResult> {
   return parseLoginResponse(
     await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}/api/auth/login`,
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}${endpoint}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -36,6 +51,29 @@ export async function login(
       }
     )
   );
+}
+
+export async function logout(accessToken: string): Promise<void> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}/api/auth/logout`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
+  if (!response.ok) {
+    let message = "Logout server gagal.";
+    try {
+      const body: unknown = await response.json();
+      if (isRecord(body) && typeof body.message === "string") {
+        message = body.message;
+      }
+    } catch {
+      // Keep the fallback message when the server response is not JSON.
+    }
+    throw new Error(message);
+  }
 }
 
 async function parseLoginResponse(

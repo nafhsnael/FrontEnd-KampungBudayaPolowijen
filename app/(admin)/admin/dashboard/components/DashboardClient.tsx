@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Building2, CalendarDays, MapPinned, Search, UsersRound } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import DashboardHeroSection from "./DashboardHeroSection";
+import DashboardStatisticsSection from "./DashboardStatisticsSection";
 
 type UserStatus = "Aktif" | "Suspended";
 
@@ -183,48 +185,8 @@ export default function AdminDashboardPage() {
 
         <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:gap-8">
-            <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#A77932]">
-                  Panel Admin
-                </p>
-                <h1 className="text-2xl font-bold tracking-tight text-[#342D27] sm:text-3xl">
-                  Dashboard
-                </h1>
-                <p className="mt-1 text-sm text-[#827970]">
-                  Ringkasan aktivitas Kampung Budaya Polowijen.
-                </p>
-              </div>
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#E7E2D9] bg-white px-3.5 py-2 text-xs font-medium text-[#6C635A] shadow-sm">
-                <span className="h-2 w-2 rounded-full bg-[#6F9876]" />
-                Sistem aktif
-              </div>
-            </header>
-
-            <section
-              aria-label="Statistik ringkasan"
-              className="grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-6"
-            >
-              {statistics.map(({ label, value, icon: Icon, accent }) => (
-                <article
-                  key={label}
-                  className="group rounded-2xl border border-[#E9E5DD] bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md sm:p-6"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-sm font-medium text-[#827970]">{label}</h2>
-                      <p className="mt-3 text-3xl font-bold tracking-tight text-[#342D27] sm:text-4xl">
-                        {value}
-                      </p>
-                      <p className="mt-1 text-xs text-[#9A9188]">Total terdaftar</p>
-                    </div>
-                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${accent}`}>
-                      <Icon size={22} strokeWidth={1.8} aria-hidden="true" />
-                    </span>
-                  </div>
-                </article>
-              ))}
-            </section>
+            <DashboardHeroSection />
+            <DashboardStatisticsSection statistics={statistics} />
 
             <section className="overflow-hidden rounded-2xl border border-[#E9E5DD] bg-white shadow-sm">
               <header className="flex flex-col gap-3 border-b border-[#EEEAE4] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">

@@ -20,54 +20,94 @@ app/
 │   ├── login/
 │   │   ├── components/
 │   │   │   ├── LoginForm.tsx
-│   │   │   └── LoginFormClient.tsx
+│   │   │   ├── LoginFormClient.tsx
+│   │   │   ├── LoginSection.tsx
+│   │   │   └── LoginWelcomeSection.tsx
 │   │   └── page.tsx
 │   └── register/
 │       ├── components/
-│       │   └── RegisterForm.tsx
+│       │   ├── RegisterForm.tsx
+│       │   ├── RegisterSection.tsx
+│       │   └── RegisterWelcomeSection.tsx
 │       └── page.tsx
 ├── (admin)/
 │   └── admin/
 │       ├── layout.tsx
 │       ├── page.tsx
 │       ├── dashboard/
-│       │   ├── components/DashboardClient.tsx
+│       │   ├── components/
+│       │   │   ├── DashboardClient.tsx
+│       │   │   ├── DashboardHeroSection.tsx
+│       │   │   └── DashboardStatisticsSection.tsx
 │       │   └── page.tsx
 │       ├── data-user/
-│       │   ├── components/DataUserClient.tsx
+│       │   ├── components/
+│       │   │   ├── DataUserClient.tsx
+│       │   │   ├── DataUserHeaderSection.tsx
+│       │   │   └── DataUserSummarySection.tsx
 │       │   └── page.tsx
 │       ├── events/
-│       │   ├── components/EventsClient.tsx
+│       │   ├── components/
+│       │   │   ├── EventsClient.tsx
+│       │   │   └── EventSections.tsx
 │       │   └── page.tsx
 │       ├── login/
-│       │   ├── components/AdminLoginClient.tsx
+│       │   ├── components/
+│       │   │   ├── AdminLoginClient.tsx
+│       │   │   ├── AdminLoginFooter.tsx
+│       │   │   └── AdminLoginHero.tsx
 │       │   └── page.tsx
 │       ├── logout/
-│       │   ├── components/LogoutClient.tsx
+│       │   ├── components/
+│       │   │   ├── LogoutClient.tsx
+│       │   │   └── LogoutStatusSection.tsx
 │       │   └── page.tsx
 │       ├── paket/
-│       │   ├── components/PaketClient.tsx
+│       │   ├── components/
+│       │   │   ├── PaketClient.tsx
+│       │   │   └── PaketSections.tsx
 │       │   └── page.tsx
 │       ├── umkm/
-│       │   ├── components/UmkmClient.tsx
+│       │   ├── components/
+│       │   │   ├── UmkmClient.tsx
+│       │   │   └── UmkmSections.tsx
 │       │   └── page.tsx
 │       └── users/
-│           ├── components/UsersClient.tsx
+│           ├── components/
+│           │   ├── UsersClient.tsx
+│           │   ├── UsersHeaderSection.tsx
+│           │   └── UsersSummarySection.tsx
 │           └── page.tsx
 ├── (user)/
 │   ├── dashboard/
 │   │   ├── layout.tsx
+│   │   ├── components/
+│   │   │   ├── DashboardHero.tsx
+│   │   │   └── DashboardLinks.tsx
 │   │   └── page.tsx
 │   ├── favorite/
-│   │   ├── components/FavoriteClient.tsx
+│   │   ├── components/
+│   │   │   ├── FavoriteClient.tsx
+│   │   │   ├── FavoriteHero.tsx
+│   │   │   └── FavoriteProductsSection.tsx
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── umkm/
 │   │   ├── components/
 │   │   │   ├── ProductCard.tsx
+│   │   │   ├── CatalogHeaderSection.tsx
+│   │   │   ├── ProductDetailSection.tsx
+│   │   │   ├── UMKMSection.tsx
 │   │   │   └── UMKMPage.tsx
-│   │   ├── [id]/page.tsx
+│   │   ├── [id]/
+│   │   │   ├── components/
+│   │   │   │   ├── UmkmDetailActions.tsx
+│   │   │   │   └── UmkmDetailHero.tsx
+│   │   │   └── page.tsx
 │   │   └── page.tsx
+│   ├── components/
+│   │   ├── HomeActions.tsx
+│   │   └── HomeHero.tsx
 │   └── page.tsx
 ├── components/
 │   ├── admin/AdminSidebar.tsx
@@ -102,6 +142,15 @@ diletakkan di `app/components/`.
 `app/layout.tsx` menangani root layout dan mengimpor CSS global dari
 `styles/globals.css`. Tipe bersama disimpan di `types/`; `lib/` dan `services/`
 disiapkan untuk utilitas dan integrasi layanan bersama.
+Susun setiap halaman dari beberapa komponen section terpisah di folder
+`components/` route tersebut, misalnya hero/header, ringkasan, daftar konten,
+form, dan aksi. Contoh section lain mencakup `HomeHero`, `HomeActions`,
+`DataUserHeaderSection`, `UpcomingEventSection`, `EventHistorySection`, dan
+`JadwalSection`. Komponen halaman atau client menjadi pengatur state dan
+menyusun section-section itu, sementara `page.tsx` memanggil komponen halaman
+serta tetap menjadi tempat metadata atau pengambilan parameter route. Pertahankan
+`"use client"` pada komponen yang memakai state, event handler, atau browser API.
+Komponen lintas halaman tetap berada di `app/components/`.
 
 ## Autentikasi dan otorisasi
 
