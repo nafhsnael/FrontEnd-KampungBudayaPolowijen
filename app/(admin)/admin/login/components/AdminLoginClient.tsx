@@ -6,6 +6,11 @@ import { useRouter } from "next/navigation";
 import { saveAuthSession } from "@/lib/auth/session";
 import { adminLogin } from "@/services/auth";
 
+// ── Demo admin account (bypass backend) ──────────────────────────
+const DEMO_EMAIL = "admin@demo.com";
+const DEMO_PASSWORD = "demo1234";
+const DEMO_TOKEN = "demo-admin-token-kampung-polowijen";
+
 export default function AdminLoginClient() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -16,7 +21,7 @@ export default function AdminLoginClient() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const normalizedEmail = email.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail || !password) {
       setError("Email dan password wajib diisi.");
@@ -30,6 +35,17 @@ export default function AdminLoginClient() {
 
     setError("");
     setIsLoading(true);
+
+    // ── Demo account: bypass backend API ───────────────────────
+    if (normalizedEmail === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      saveAuthSession(
+        { accessToken: DEMO_TOKEN, role: "admin" },
+        true
+      );
+      router.replace("/admin/dashboard");
+      return;
+    }
+
     try {
       const session = await adminLogin(normalizedEmail, password);
       if (session.role !== "admin") {
@@ -111,6 +127,19 @@ export default function AdminLoginClient() {
       >
         {isLoading ? "Memproses..." : "Login"}
       </button>
+
+      {/* Demo credential hint */}
+      <div className="mt-2 rounded-xl border border-amber-700/30 bg-amber-900/20 px-4 py-3 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">
+          🔑 Demo Account
+        </p>
+        <p className="mt-1 text-xs text-stone-300">
+          <span className="text-amber-200">Email:</span> admin@demo.com
+        </p>
+        <p className="text-xs text-stone-300">
+          <span className="text-amber-200">Password:</span> demo1234
+        </p>
+      </div>
     </form>
   );
 }

@@ -7,7 +7,7 @@ import DataUserHeaderSection from "./DataUserHeaderSection";
 import DataUserSummarySection from "./DataUserSummarySection";
 
 type UserStatus = "Aktif" | "Suspended";
-type UserAccess = "admin" | "operator" | "viewer";
+type UserAccess = "admin" | "user";
 
 type UserRecord = {
   id: number;
@@ -28,23 +28,23 @@ const USER_CACHE_TTL = 5 * 60 * 1000;
 
 const INITIAL_USERS: UserRecord[] = [
   { id: 1, role: "Super Admin", email: "admin@kambudpolo.com", username: "admin_utama", access: "admin", status: "Aktif" },
-  { id: 2, role: "Manajer UMKM", email: "umkm@kambudpolo.com", username: "manajer_umkm", access: "operator", status: "Aktif" },
+  { id: 2, role: "Manajer UMKM", email: "umkm@kambudpolo.com", username: "manajer_umkm", access: "user", status: "Aktif" },
   { id: 3, role: "Admin Event", email: "event@kambudpolo.com", username: "event_admin", access: "admin", status: "Aktif" },
-  { id: 4, role: "Pengelola Paket", email: "paket@kambudpolo.com", username: "paket_admin", access: "operator", status: "Suspended" },
-  { id: 5, role: "User", email: "pembaca@kambudpolo.com", username: "pembaca1", access: "viewer", status: "Aktif" },
-  { id: 6, role: "Manajer UMKM", email: "budi@kambudpolo.com", username: "budi_santoso", access: "operator", status: "Aktif" },
+  { id: 4, role: "Pengelola Paket", email: "paket@kambudpolo.com", username: "paket_admin", access: "user", status: "Suspended" },
+  { id: 5, role: "User", email: "pembaca@kambudpolo.com", username: "pembaca1", access: "user", status: "Aktif" },
+  { id: 6, role: "Manajer UMKM", email: "budi@kambudpolo.com", username: "budi_santoso", access: "user", status: "Aktif" },
   { id: 7, role: "Admin Event", email: "sari@kambudpolo.com", username: "sari_widiyanti", access: "admin", status: "Aktif" },
-  { id: 8, role: "User", email: "dimas@kambudpolo.com", username: "dimas_putri", access: "viewer", status: "Suspended" },
-  { id: 9, role: "Manajer UMKM", email: "arif@kambudpolo.com", username: "arif_pratama", access: "operator", status: "Aktif" },
-  { id: 10, role: "Pengelola Paket", email: "maya@kambudpolo.com", username: "maya_lestari", access: "operator", status: "Aktif" },
+  { id: 8, role: "User", email: "dimas@kambudpolo.com", username: "dimas_putri", access: "user", status: "Suspended" },
+  { id: 9, role: "Manajer UMKM", email: "arif@kambudpolo.com", username: "arif_pratama", access: "user", status: "Aktif" },
+  { id: 10, role: "Pengelola Paket", email: "maya@kambudpolo.com", username: "maya_lestari", access: "user", status: "Aktif" },
   { id: 11, role: "Super Admin", email: "putri@kambudpolo.com", username: "putri_admin", access: "admin", status: "Aktif" },
-  { id: 12, role: "User", email: "rudi@kambudpolo.com", username: "rudi_wahidin", access: "viewer", status: "Aktif" },
+  { id: 12, role: "User", email: "rudi@kambudpolo.com", username: "rudi_wahidin", access: "user", status: "Aktif" },
   { id: 13, role: "Admin Event", email: "nisa@kambudpolo.com", username: "nisa_azizah", access: "admin", status: "Aktif" },
-  { id: 14, role: "Manajer UMKM", email: "fajar@kambudpolo.com", username: "fajar_ramadhan", access: "operator", status: "Suspended" },
-  { id: 15, role: "Pengelola Paket", email: "indah@kambudpolo.com", username: "indah_sari", access: "operator", status: "Aktif" },
-  { id: 16, role: "User", email: "dian@kambudpolo.com", username: "dian_mayanti", access: "viewer", status: "Aktif" },
+  { id: 14, role: "Manajer UMKM", email: "fajar@kambudpolo.com", username: "fajar_ramadhan", access: "user", status: "Suspended" },
+  { id: 15, role: "Pengelola Paket", email: "indah@kambudpolo.com", username: "indah_sari", access: "user", status: "Aktif" },
+  { id: 16, role: "User", email: "dian@kambudpolo.com", username: "dian_mayanti", access: "user", status: "Aktif" },
   { id: 17, role: "Admin Event", email: "rio@kambudpolo.com", username: "rio_pratama", access: "admin", status: "Aktif" },
-  { id: 18, role: "Manajer UMKM", email: "tari@kambudpolo.com", username: "tari_puspita", access: "operator", status: "Aktif" },
+  { id: 18, role: "Manajer UMKM", email: "tari@kambudpolo.com", username: "tari_puspita", access: "user", status: "Aktif" },
 ];
 
 let memoryCache: UserCache | null = null;
@@ -58,7 +58,7 @@ function isUserRecord(value: unknown): value is UserRecord {
     typeof user.role === "string" &&
     typeof user.email === "string" &&
     typeof user.username === "string" &&
-    (user.access === "admin" || user.access === "operator" || user.access === "viewer") &&
+    (user.access === "admin" || user.access === "user") &&
     (user.status === "Aktif" || user.status === "Suspended")
   );
 }
@@ -411,17 +411,11 @@ export default function AdminDataUserPage() {
                 Akses
                 <select
                   value={draft.access}
-                  onChange={(event) => {
-                    const access = event.target.value;
-                    if (access === "admin" || access === "operator" || access === "viewer") {
-                      setDraft({ ...draft, access });
-                    }
-                  }}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
+                  disabled
+                  className="rounded-xl border border-[#E0DBD5] bg-[#F0EDEA] px-3 py-2.5 text-sm text-[#9A9188] outline-none cursor-not-allowed"
                 >
                   <option value="admin">Admin</option>
-                  <option value="operator">Operator</option>
-                  <option value="viewer">Viewer</option>
+                  <option value="user">User</option>
                 </select>
               </label>
               <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">

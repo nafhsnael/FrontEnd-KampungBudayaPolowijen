@@ -31,9 +31,9 @@ const INITIAL_USERS: UserRecord[] = [
 ];
 
 const STATISTICS = [
-  { label: "UMKM", value: "50", icon: Building2, accent: "bg-[#EAF2EB] text-[#55765D]" },
-  { label: "Event", value: "50", icon: CalendarDays, accent: "bg-[#F8EFE1] text-[#A77932]" },
-  { label: "Paket Kunjungan", value: "50", icon: MapPinned, accent: "bg-[#F3EAE5] text-[#98634B]" },
+  { label: "UMKM", value: "8", icon: Building2, accent: "bg-[#EAF2EB] text-[#55765D]" },
+  { label: "Event", value: "7", icon: CalendarDays, accent: "bg-[#F8EFE1] text-[#A77932]" },
+  { label: "Paket Kunjungan", value: "4", icon: MapPinned, accent: "bg-[#F3EAE5] text-[#98634B]" },
 ];
 
 type DashboardData = {
@@ -371,13 +371,8 @@ export default function AdminDashboardPage() {
                 Akses
                 <select
                   value={draft.access}
-                  onChange={(event) => {
-                    const access = event.target.value;
-                    if (access === "admin" || access === "user") {
-                      setDraft({ ...draft, access });
-                    }
-                  }}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C59B4E] focus:ring-2 focus:ring-[#C59B4E]/20"
+                  disabled
+                  className="rounded-xl border border-[#E0DBD5] bg-[#F0EDEA] px-3 py-2.5 text-sm text-[#9A9188] outline-none cursor-not-allowed"
                 >
                   <option value="admin">Admin</option>
                   <option value="user">User</option>

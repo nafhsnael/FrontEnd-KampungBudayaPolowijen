@@ -42,14 +42,6 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
   return (
     <>
       <header className="admin-mobile-topbar">
-        <Link
-          href="/admin/dashboard"
-          className="mobile-brand"
-          aria-label="Kampung Budaya Polowijen - Dashboard"
-        >
-          <Image src="/images/logok.png" alt="" width={34} height={48} priority />
-        </Link>
-        <span className="mobile-title">Panel Admin</span>
         <button
           type="button"
           className="menu-toggle"
@@ -61,6 +53,15 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           <Menu size={18} aria-hidden="true" />
           <span>Menu</span>
         </button>
+        <Link
+          href="/admin/dashboard"
+          className="mobile-brand"
+          aria-label="Kampung Budaya Polowijen - Dashboard"
+        >
+          <Image src="/images/logok.png" alt="" width={34} height={48} priority />
+        </Link>
+        {/* Invisible spacer to keep logo centered */}
+        <span className="menu-toggle-spacer" aria-hidden="true" />
       </header>
 
       {menuOpen && (
@@ -246,8 +247,6 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
             object-fit: contain;
           }
 
-          .mobile-title { display:none; }
-
           .menu-toggle {
             display: inline-flex;
             min-height: 39px;
@@ -263,6 +262,16 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           }
 
           .menu-toggle:hover { background:rgba(250,243,224,.1); }
+
+          /* Invisible spacer — same size as .menu-toggle so logo stays centered */
+          .menu-toggle-spacer {
+            display: inline-flex;
+            min-height: 39px;
+            min-width: 82px;
+            padding: 6px 13px;
+            visibility: hidden;
+            pointer-events: none;
+          }
 
           .admin-sidebar {
             position: fixed;
