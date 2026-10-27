@@ -6,17 +6,14 @@ import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import DataUserHeaderSection from "./DataUserHeaderSection";
 import DataUserSummarySection from "./DataUserSummarySection";
 
-type UserStatus = "Aktif" | "Suspended";
-type UserAccess = "admin" | "user";
-
-type UserRecord = {
-  id: number;
-  role: string;
-  email: string;
-  username: string;
-  access: UserAccess;
-  status: UserStatus;
-};
+import {
+  fetchUsersFromApi,
+  updateUserApi,
+  toggleUserStatusApi,
+  type UserRecord,
+  type UserStatus,
+  type UserAccess,
+} from "@/services/users";
 
 type UserCache = {
   expiresAt: number;
@@ -54,7 +51,7 @@ function isUserRecord(value: unknown): value is UserRecord {
   const user = value as Partial<UserRecord>;
 
   return (
-    typeof user.id === "number" &&
+    (typeof user.id === "number" || typeof user.id === "string") &&
     typeof user.role === "string" &&
     typeof user.email === "string" &&
     typeof user.username === "string" &&
@@ -75,6 +72,19 @@ function isUserCache(value: unknown): value is UserCache {
 }
 
 async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string | null }> {
+  // 1. Coba ambil dari Backend API
+  try {
+    const apiUsers = await fetchUsersFromApi();
+    if (apiUsers && apiUsers.length > 0) {
+      cacheUserData(apiUsers);
+      return { users: apiUsers, warning: null };
+    }
+  } catch (apiErr) {
+    // Backend offline / error / demo session, lanjut ke cache / fallback
+    console.warn("Backend API tidak dapat dijangkau, menggunakan data cache / lokal:", apiErr);
+  }
+
+  // 2. Cek memori cache
   if (memoryCache && memoryCache.expiresAt > Date.now()) {
     return {
       users: memoryCache.users.map((user) => ({ ...user })),
@@ -84,13 +94,14 @@ async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string |
 
   let warning: string | null = null;
 
+  // 3. Cek localStorage
   if (typeof window !== "undefined") {
     try {
       const cachedValue = window.localStorage.getItem(USER_CACHE_KEY);
       if (cachedValue) {
         const parsedValue: unknown = JSON.parse(cachedValue);
         if (!isUserCache(parsedValue)) {
-          warning = "Cache user tidak valid. Data awal ditampilkan.";
+          warning = "Cache user lokal tidak valid. Data default ditampilkan.";
         } else if (parsedValue.expiresAt > Date.now()) {
           memoryCache = parsedValue;
           return {
@@ -100,7 +111,7 @@ async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string |
         }
       }
     } catch {
-      warning = "Cache lokal tidak dapat dibaca. Data awal ditampilkan.";
+      warning = "Cache lokal tidak dapat dibaca. Data default ditampilkan.";
     }
   }
 
@@ -161,23 +172,35 @@ function useUserData() {
 
   const updateUser = useCallback(
     (updatedUser: UserRecord) => {
+      // Optimistic update
       const nextUsers = users.map((user) =>
-        user.id === updatedUser.id ? { ...updatedUser } : user,
+        String(user.id) === String(updatedUser.id) ? { ...updatedUser } : user,
       );
       setUsers(nextUsers);
       setCacheWarning(cacheUserData(nextUsers));
+
+      // Kirim pembaruan ke Backend API
+      updateUserApi(updatedUser.id, updatedUser).catch((err) => {
+        console.warn("Sinkronisasi update ke backend gagal:", err);
+      });
     },
     [users],
   );
 
   const toggleStatus = useCallback(
-    (userId: number) => {
-      const user = users.find((currentUser) => currentUser.id === userId);
+    (userId: number | string) => {
+      const user = users.find((currentUser) => String(currentUser.id) === String(userId));
       if (!user) return;
 
-      updateUser({
+      const nextStatus: UserStatus = user.status === "Aktif" ? "Suspended" : "Aktif";
+      const updatedUser: UserRecord = {
         ...user,
-        status: user.status === "Aktif" ? "Suspended" : "Aktif",
+        status: nextStatus,
+      };
+
+      updateUser(updatedUser);
+      toggleUserStatusApi(userId, nextStatus).catch((err) => {
+        console.warn("Sinkronisasi toggle status ke backend gagal:", err);
       });
     },
     [updateUser, users],

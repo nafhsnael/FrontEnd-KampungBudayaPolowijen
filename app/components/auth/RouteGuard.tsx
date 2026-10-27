@@ -34,7 +34,7 @@ export default function RouteGuard({
     getAuthRole,
     () => null
   );
-  const isBypassed = bypassPaths.includes(pathname);
+  const isBypassed = pathname ? bypassPaths.includes(pathname) : false;
 
   useEffect(() => {
     if (isBypassed) return;

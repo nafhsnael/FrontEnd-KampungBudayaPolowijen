@@ -4,40 +4,44 @@
 
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import { Pencil, UserRound, X } from "lucide-react";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import UsersHeaderSection from "./UsersHeaderSection";
 import UsersSummarySection from "./UsersSummarySection";
-
-type UserStatus = "Aktif" | "Suspended";
+import {
+  fetchUsersFromApi,
+  updateUserApi,
+  toggleUserStatusApi,
+  type UserStatus,
+} from "@/services/users";
 
 type UserRecord = {
-  id: number;
+  id: number | string;
   role: string;
   email: string;
   username: string;
-  access: "admin" | "operator" | "viewer";
+  access: "admin" | "user" | "operator" | "viewer";
   status: UserStatus;
 };
 
 const USERS: UserRecord[] = [
   { id: 1, role: "Super Admin", email: "admin@kambudpolo.com", username: "admin_utama", access: "admin", status: "Aktif" },
-  { id: 2, role: "Manajer UMKM", email: "umkm@kambudpolo.com", username: "manajer_umkm", access: "operator", status: "Aktif" },
+  { id: 2, role: "Manajer UMKM", email: "umkm@kambudpolo.com", username: "manajer_umkm", access: "user", status: "Aktif" },
   { id: 3, role: "Admin Event", email: "event@kambudpolo.com", username: "event_admin", access: "admin", status: "Aktif" },
-  { id: 4, role: "Pengelola Paket", email: "paket@kambudpolo.com", username: "paket_admin", access: "operator", status: "Suspended" },
-  { id: 5, role: "Pembaca", email: "pembaca@kambudpolo.com", username: "pembaca1", access: "viewer", status: "Aktif" },
-  { id: 6, role: "Manajer UMKM", email: "budi@kambudpolo.com", username: "budi_santoso", access: "operator", status: "Aktif" },
+  { id: 4, role: "Pengelola Paket", email: "paket@kambudpolo.com", username: "paket_admin", access: "user", status: "Suspended" },
+  { id: 5, role: "Pembaca", email: "pembaca@kambudpolo.com", username: "pembaca1", access: "user", status: "Aktif" },
+  { id: 6, role: "Manajer UMKM", email: "budi@kambudpolo.com", username: "budi_santoso", access: "user", status: "Aktif" },
   { id: 7, role: "Admin Event", email: "sari@kambudpolo.com", username: "sari_widiyanti", access: "admin", status: "Aktif" },
-  { id: 8, role: "Pembaca", email: "dimas@kambudpolo.com", username: "dimas_putri", access: "viewer", status: "Suspended" },
-  { id: 9, role: "Manajer UMKM", email: "arif@kambudpolo.com", username: "arif_pratama", access: "operator", status: "Aktif" },
-  { id: 10, role: "Pengelola Paket", email: "maya@kambudpolo.com", username: "maya_lestari", access: "operator", status: "Aktif" },
+  { id: 8, role: "Pembaca", email: "dimas@kambudpolo.com", username: "dimas_putri", access: "user", status: "Suspended" },
+  { id: 9, role: "Manajer UMKM", email: "arif@kambudpolo.com", username: "arif_pratama", access: "user", status: "Aktif" },
+  { id: 10, role: "Pengelola Paket", email: "maya@kambudpolo.com", username: "maya_lestari", access: "user", status: "Aktif" },
   { id: 11, role: "Super Admin", email: "putri@kambudpolo.com", username: "putri_admin", access: "admin", status: "Aktif" },
-  { id: 12, role: "Pembaca", email: "rudi@kambudpolo.com", username: "rudi_wahidin", access: "viewer", status: "Aktif" },
+  { id: 12, role: "Pembaca", email: "rudi@kambudpolo.com", username: "rudi_wahidin", access: "user", status: "Aktif" },
   { id: 13, role: "Admin Event", email: "nisa@kambudpolo.com", username: "nisa_azizah", access: "admin", status: "Aktif" },
-  { id: 14, role: "Manajer UMKM", email: "fajar@kambudpolo.com", username: "fajar_ramadhan", access: "operator", status: "Suspended" },
-  { id: 15, role: "Pengelola Paket", email: "indah@kambudpolo.com", username: "indah_sari", access: "operator", status: "Aktif" },
-  { id: 16, role: "Pembaca", email: "dian@kambudpolo.com", username: "dian_mayanti", access: "viewer", status: "Aktif" },
+  { id: 14, role: "Manajer UMKM", email: "fajar@kambudpolo.com", username: "fajar_ramadhan", access: "user", status: "Suspended" },
+  { id: 15, role: "Pengelola Paket", email: "indah@kambudpolo.com", username: "indah_sari", access: "user", status: "Aktif" },
+  { id: 16, role: "Pembaca", email: "dian@kambudpolo.com", username: "dian_mayanti", access: "user", status: "Aktif" },
   { id: 17, role: "Admin Event", email: "rio@kambudpolo.com", username: "rio_pratama", access: "admin", status: "Aktif" },
-  { id: 18, role: "Manajer UMKM", email: "tari@kambudpolo.com", username: "tari_puspita", access: "operator", status: "Aktif" },
+  { id: 18, role: "Manajer UMKM", email: "tari@kambudpolo.com", username: "tari_puspita", access: "user", status: "Aktif" },
 ];
 
 export default function AdminUsersPage() {
@@ -47,6 +51,23 @@ export default function AdminUsersPage() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [draft, setDraft] = useState<UserRecord | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchUsersFromApi()
+      .then((apiUsers) => {
+        if (!isMounted) return;
+        if (apiUsers && apiUsers.length > 0) {
+          setUsers(apiUsers);
+        }
+      })
+      .catch((err) => {
+        console.warn("Users API unreachable, using default mock:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredUsers = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -76,19 +97,33 @@ export default function AdminUsersPage() {
     if (!draft) return;
 
     setUsers((current) =>
-      current.map((user) => (user.id === draft.id ? { ...draft } : user)),
+      current.map((user) => (String(user.id) === String(draft.id) ? { ...draft } : user)),
     );
+    updateUserApi(draft.id, {
+      role: draft.role,
+      username: draft.username,
+      email: draft.email,
+      status: draft.status,
+      access: draft.access === "admin" ? "admin" : "user",
+    }).catch((err) => {
+      console.warn("Failed to update user via API:", err);
+    });
     closeEdit();
   }
 
-  function toggleStatus(userId: number) {
+  function toggleStatus(userId: number | string) {
+    const user = users.find((currentUser) => String(currentUser.id) === String(userId));
+    if (!user) return;
+    const nextStatus: UserStatus = user.status === "Aktif" ? "Suspended" : "Aktif";
+
     setUsers((current) =>
-      current.map((user) =>
-        user.id === userId
-          ? { ...user, status: user.status === "Aktif" ? "Suspended" : "Aktif" }
-          : user,
+      current.map((item) =>
+        String(item.id) === String(userId) ? { ...item, status: nextStatus } : item,
       ),
     );
+    toggleUserStatusApi(userId, nextStatus).catch((err) => {
+      console.warn("Failed to toggle user status via API:", err);
+    });
   }
 
   return (

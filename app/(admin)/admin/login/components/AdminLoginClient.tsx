@@ -128,16 +128,16 @@ export default function AdminLoginClient() {
         {isLoading ? "Memproses..." : "Login"}
       </button>
 
-      {/* Demo credential hint */}
+      {/* Demo / Admin credential hint */}
       <div className="mt-2 rounded-xl border border-amber-700/30 bg-amber-900/20 px-4 py-3 text-center">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">
-          🔑 Demo Account
+          🔑 Akun Administrator
         </p>
         <p className="mt-1 text-xs text-stone-300">
-          <span className="text-amber-200">Email:</span> admin@demo.com
+          <span className="text-amber-200">Database:</span> admin@kambudpolo.com (Pass: password123)
         </p>
         <p className="text-xs text-stone-300">
-          <span className="text-amber-200">Password:</span> demo1234
+          <span className="text-amber-200">Demo:</span> admin@demo.com (Pass: demo1234)
         </p>
       </div>
     </form>

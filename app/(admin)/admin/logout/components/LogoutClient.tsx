@@ -31,7 +31,7 @@ export default function AdminLogoutPage() {
       try {
         if (session) await logout(session.accessToken);
       } catch (error) {
-        console.error("Gagal membatalkan sesi pada server.", error);
+        console.warn("Sesi server tidak dapat dibatalkan (server offline).", error);
       } finally {
         if (!cancelled) {
           redirectTimer = setTimeout(() => {

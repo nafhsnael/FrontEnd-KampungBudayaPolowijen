@@ -54,25 +54,34 @@ async function loginAtEndpoint(
 }
 
 export async function logout(accessToken: string): Promise<void> {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}/api/auth/logout`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  );
+  if (!accessToken || accessToken.startsWith("demo-")) {
+    return;
+  }
 
-  if (!response.ok) {
-    let message = "Logout server gagal.";
-    try {
-      const body: unknown = await response.json();
-      if (isRecord(body) && typeof body.message === "string") {
-        message = body.message;
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000"}/api/auth/logout`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
-    } catch {
-      // Keep the fallback message when the server response is not JSON.
+    );
+
+    if (!response.ok) {
+      let message = "Logout server gagal.";
+      try {
+        const body: unknown = await response.json();
+        if (isRecord(body) && typeof body.message === "string") {
+          message = body.message;
+        }
+      } catch {
+        // Keep the fallback message when the server response is not JSON.
+      }
+      console.warn("Peringatan logout backend:", message);
     }
-    throw new Error(message);
+  } catch (err) {
+    // Abaikan jika backend sedang offline/unreachable agar sesi lokal tetap berhasil logout
+    console.warn("Backend logout unreachable, sesi lokal tetap dibersihkan:", err);
   }
 }
 
