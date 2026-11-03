@@ -326,20 +326,23 @@ const hapusJ = () => {
         }
         .paket-app,.paket-app *,.paket-app *::before,.paket-app *::after { box-sizing:border-box; }
         @keyframes naik { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+        html { scroll-behavior: smooth; }
+        @keyframes muncul { from { opacity:0; } to { opacity:1; } }
       `}</style>
       <style jsx global>{`
         .paket-layout { min-height:100vh; display:flex; }
-        .paket-main { min-width:0; flex:1; padding:31px 32px 40px; position:relative; overflow:hidden; }
+        .paket-main { min-width:0; flex:1; padding:31px 32px 40px; position:relative; overflow-x:clip; }
         .tabs { display:grid; grid-template-columns:repeat(2,1fr); border-bottom:1px solid var(--brown); margin-bottom:26px; }
         .tabs button { background:none; border:0; border-radius:12px 12px 0 0; margin-bottom:-1px; padding:12px 10px; font:600 15px Poppins,sans-serif; color:var(--brown); cursor:pointer; transition:background .3s,color .3s,opacity .3s; opacity:.7; }
         .tabs button.on { background:var(--brown); color:var(--cream); opacity:1; }
         .paket-app button:focus-visible,.paket-app input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
-        .view { animation:naik .45s ease both; }
+        .view { animation:muncul .35s ease both; }
 
         /* ---------- Carousel ---------- */
         .car { position:relative; display:flex; align-items:center; }
-        .stage { position:relative; flex:1; height:${STAGE_H}px; touch-action:pan-y; }
+        .stage { position:relative; flex:1; height:${STAGE_H}px; touch-action:pan-y; contain:layout style; }
         .kartu {
+          will-change:transform, opacity;
           position:absolute; left:50%;
           display:flex; flex-direction:column; overflow:hidden;
           background:var(--card); border:1px solid rgba(91,71,55,.25); border-radius:19px; box-shadow:0 1px 8px rgba(31,24,18,.42);
@@ -385,6 +388,8 @@ const hapusJ = () => {
         .jcard { display:grid; grid-template-columns:minmax(175px,28%) minmax(0,1fr) 155px; align-items:center; gap:12px 24px; min-height:210px; padding:18px 20px; background:var(--card); border:1px solid rgba(91,71,55,.25); border-radius:19px; box-shadow:0 1px 8px rgba(31,24,18,.42); transition:translate .28s ease,box-shadow .28s ease,border-color .28s ease; animation:naik .55s cubic-bezier(.2,.7,.2,1) both; }
         .jcard:hover { translate:0 -4px; border-color:rgba(200,132,36,.55); box-shadow:0 10px 24px rgba(31,24,18,.16); }
         .jfoto { height:156px; border-radius:17px; background:#6b4a3a center/cover; box-shadow:0 2px 8px rgba(0,0,0,.5); }
+        .jfoto { overflow:hidden; }
+        .jfoto img { display:block; width:100%; height:100%; object-fit:cover; }
         .jcopy { min-width:0; }
         .jcopy h3 { margin:0; color:#111; font:700 16px/1.35 Poppins,sans-serif; }
         .jpill { width:fit-content; margin:7px 0 12px; padding:5px 10px; border-radius:999px; background:#f3e7d3; color:#7e4b1e; font-size:11px; font-weight:600; }

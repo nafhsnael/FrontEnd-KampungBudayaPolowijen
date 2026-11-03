@@ -84,12 +84,9 @@ export function JadwalSection({
                     <Trash2 size={14} aria-hidden="true" />
                   </button>
                 </div>
-                <div
-                  className="jfoto"
-                  style={{ backgroundImage: `url(${schedule.gambar})` }}
-                  role="img"
-                  aria-label={schedule.nama}
-                />
+                <div className="jfoto" role="img" aria-label={schedule.nama}>
+                  <img src={schedule.gambar} alt="" loading="lazy" decoding="async" />
+                </div>
                 <div className="jcopy">
                   <h3>{schedule.nama}</h3>
                   <p className="jpill">Setiap {schedule.hari}, {schedule.jam} WIB</p>
