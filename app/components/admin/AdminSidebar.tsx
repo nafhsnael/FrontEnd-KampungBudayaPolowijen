@@ -121,6 +121,7 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           <span>Keluar (Logout)</span>
         </button>
       </aside>
+      <div className="admin-sidebar-spacer" aria-hidden="true" />
 
       {logoutConfirmOpen && (
         <div
@@ -173,7 +174,8 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           display: none;
         }
 
-        .admin-sidebar { position:sticky; top:0; z-index:50; display:flex; flex-direction:column; width:234px; height:100vh; min-height:100vh; flex:0 0 234px; align-self:flex-start; padding:30px 0; overflow-y:auto; background:#3D2018; }
+        .admin-sidebar { position:fixed; inset:0 auto 0 0; z-index:50; display:flex; flex-direction:column; width:234px; height:100vh; height:100dvh; min-height:100vh; padding:30px 0; overflow-y:auto; background:#3D2018; }
+        .admin-sidebar-spacer { display:block; width:234px; min-width:234px; flex:0 0 234px; }
 
         .sidebar-brand {
           display: flex;
@@ -195,7 +197,7 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
         }
 
         .sidebar-nav { display:flex; flex-direction:column; gap:13px; }
-        .sidebar-nav :global(a) { display:flex; min-height:47px; align-items:center; justify-content:center; margin-left:34px; padding:8px 12px; border-radius:999px 0 0 999px; color:#fff8ec; text-align:center; text-decoration:none; font:400 24px/1.1 "Great Vibes",cursive; transition:background .2s,color .2s; }
+        .sidebar-nav :global(a) { display:flex; min-height:47px; align-items:center; justify-content:center; margin-left:34px; padding:8px 12px; border-radius:999px 0 0 999px; color:#fff8ec; text-align:center; text-decoration:none; font:400 24px/1.1 var(--font-script),cursive; transition:background .2s,color .2s; }
         .sidebar-nav :global(a:hover) { color:#f1cf9f; }
         .sidebar-nav :global(a.active) { background:#FAF3E0; color:#9B3D32; }
 
@@ -284,6 +286,10 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
             transform: translateX(-105%);
             transition: transform 0.25s ease;
             box-shadow: 8px 0 25px rgba(0,0,0,.2);
+          }
+
+          .admin-sidebar-spacer {
+            display: none;
           }
 
           .admin-sidebar.open {

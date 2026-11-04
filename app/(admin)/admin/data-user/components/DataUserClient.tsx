@@ -326,11 +326,11 @@ export default function AdminDataUserPage() {
                     <span
                       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${
                         user.status === "Aktif"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-rose-50 text-rose-700"
+                          ? "bg-[#E8F2E9] text-[#4F7958]"
+                          : "bg-[#F9E9E6] text-[#AD5145]"
                       }`}
                     >
-                      <span className={`h-1.5 w-1.5 rounded-full ${user.status === "Aktif" ? "bg-emerald-500" : "bg-rose-500"}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full ${user.status === "Aktif" ? "bg-[#4F7958]" : "bg-[#AD5145]"}`} />
                       {user.status}
                     </span>
                   </div>
@@ -340,7 +340,7 @@ export default function AdminDataUserPage() {
                       type="button"
                       onClick={() => openEdit(user)}
                       aria-label={`Edit data ${user.username}`}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#00B493] px-3 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#00977F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#007B67]"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#55765D] px-3 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#45644D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55765D]"
                     >
                       <Pencil size={11} aria-hidden="true" />
                       Edit
@@ -350,13 +350,13 @@ export default function AdminDataUserPage() {
                       onClick={() => toggleStatus(user.id)}
                       aria-pressed={user.status === "Suspended"}
                       aria-label={user.status === "Aktif" ? `Suspend ${user.username}` : `Aktifkan ${user.username}`}
-                      className={`rounded-full px-3 py-1.5 text-[10px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9B3D32] ${
+                      className={`rounded-full px-3 py-1.5 text-[10px] font-semibold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                         user.status === "Aktif"
-                          ? "bg-[#FF4D4D] text-white hover:bg-[#E83F3F]"
-                          : "bg-[#E9F7F3] text-[#007B67] hover:bg-[#D9F1EB]"
+                          ? "bg-[#B85D50] hover:bg-[#A84F43]"
+                          : "bg-[#55765D] hover:bg-[#45644D]"
                       }`}
                     >
-                      {user.status === "Aktif" ? "Suspe" : "Aktifkan"}
+                      {user.status === "Aktif" ? "Suspend" : "Aktifkan"}
                     </button>
                   </div>
                 </article>

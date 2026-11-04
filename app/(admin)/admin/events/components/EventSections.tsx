@@ -61,14 +61,14 @@ type EventSectionsProps = {
 };
 
 export function UpcomingEventSection({
-  event,
+  events,
   onCreate,
   onEdit,
   onDelete,
   onMoveToHistory,
 }: EventSectionsProps & {
-  event: EventItem | null;
-  onMoveToHistory: () => void;
+  events: EventItem[];
+  onMoveToHistory: (event: EventItem) => void;
 }) {
   return (
     <section aria-labelledby="upcoming-heading">
@@ -79,41 +79,43 @@ export function UpcomingEventSection({
           <span>Tambah event</span>
         </button>
       </div>
-      {event ? (
-        <article className="featured-event">
-          <CardActions
-            onEdit={() => onEdit(event)}
-            onDelete={() => onDelete(event)}
-            onMoveToHistory={onMoveToHistory}
-          />
-          <div className="featured-heading">
-            <h2>{event.name}</h2>
-            <p className="event-date">
-              <CalendarDays size={14} aria-hidden="true" /> {event.date}
-            </p>
-          </div>
-          <div className="featured-content">
-            <div className="featured-image-frame">
-              <Image
-                className="featured-image"
-                src={event.image}
-                alt={event.name}
-                width={800}
-                height={500}
-                unoptimized
-                loading="eager"
-              />
+      {events.length > 0 ? (
+        events.map((event, index) => (
+          <article className="featured-event" key={event.id} style={{ animationDelay: `${index * 80}ms` }}>
+            <CardActions
+              onEdit={() => onEdit(event)}
+              onDelete={() => onDelete(event)}
+              onMoveToHistory={() => onMoveToHistory(event)}
+            />
+            <div className="featured-heading">
+              <h2>{event.name}</h2>
+              <p className="event-date">
+                <CalendarDays size={14} aria-hidden="true" /> {event.date}
+              </p>
             </div>
-            <div className="event-description">
-              <h3>Tentang Kegiatan</h3>
-              <p>{event.description}</p>
-              <div className="featured-stats">
-                <Info label="Kuota" value={event.capacity} />
-                <Info label="Harga Tiket" value={event.price} />
+            <div className="featured-content">
+              <div className="featured-image-frame">
+                <Image
+                  className="featured-image"
+                  src={event.image}
+                  alt={event.name}
+                  width={800}
+                  height={500}
+                  unoptimized
+                  loading="eager"
+                />
+              </div>
+              <div className="event-description">
+                <h3>Tentang Kegiatan</h3>
+                <p>{event.description}</p>
+                <div className="featured-stats">
+                  <Info label="Kuota" value={event.capacity} />
+                  <Info label="Harga Tiket" value={event.price} />
+                </div>
               </div>
             </div>
-          </div>
-        </article>
+          </article>
+        ))
       ) : (
         <article className="featured-event featured-empty">
           <CalendarDays size={28} aria-hidden="true" />

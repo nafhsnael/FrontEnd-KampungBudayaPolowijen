@@ -16,7 +16,7 @@ const nyekar = "/images/nyekar.png";
 const taritopeng = "/images/taritopeng.png";
 
 type EventCache = {
-  nearEvent: EventItem | null;
+  nearEvents: EventItem[];
   events: EventItem[];
 };
 
@@ -35,12 +35,20 @@ function isEventItem(value: unknown): value is EventItem {
     && typeof event.price === "string";
 }
 
-function isEventCache(value: unknown): value is EventCache {
-  if (!value || typeof value !== "object") return false;
+function parseEventCache(value: unknown): EventCache | null {
+  if (!value || typeof value !== "object") return null;
   const cache = value as Record<string, unknown>;
-  return (cache.nearEvent === null || isEventItem(cache.nearEvent))
-    && Array.isArray(cache.events)
-    && cache.events.every(isEventItem);
+  if (!Array.isArray(cache.events) || !cache.events.every(isEventItem)) return null;
+  if (Array.isArray(cache.nearEvents) && cache.nearEvents.every(isEventItem)) {
+    return { nearEvents: cache.nearEvents, events: cache.events };
+  }
+  if (cache.nearEvent === null || isEventItem(cache.nearEvent)) {
+    return {
+      nearEvents: cache.nearEvent ? [cache.nearEvent] : [],
+      events: cache.events,
+    };
+  }
+  return null;
 }
 
 const eventCacheListeners = new Set<() => void>();
@@ -201,24 +209,18 @@ function useEventCache() {
   const cache = useMemo(() => {
     try {
       const cachedData: unknown = serializedCache ? JSON.parse(serializedCache) : null;
-      if (isEventCache(cachedData)) return cachedData;
+      const parsedCache = parseEventCache(cachedData);
+      if (parsedCache) return parsedCache;
     } catch {
-      return { nearEvent: NEAR_EVENT, events: PAST_EVENTS };
+      return { nearEvents: [NEAR_EVENT], events: PAST_EVENTS };
     }
-    return { nearEvent: NEAR_EVENT, events: PAST_EVENTS };
+    return { nearEvents: [NEAR_EVENT], events: PAST_EVENTS };
   }, [serializedCache]);
 
   function updateCache(update: EventCache | ((current: EventCache) => EventCache)) {
     const nextCache = typeof update === "function" ? update(cache) : update;
-    const safeEvent = (event: EventItem): EventItem => event.image.startsWith("blob:")
-      ? { ...event, image: taritopeng }
-      : event;
-    const cacheToStore: EventCache = {
-      nearEvent: nextCache.nearEvent ? safeEvent(nextCache.nearEvent) : null,
-      events: nextCache.events.map(safeEvent),
-    };
     try {
-      window.localStorage.setItem(EVENT_CACHE_KEY, JSON.stringify(cacheToStore));
+      window.localStorage.setItem(EVENT_CACHE_KEY, JSON.stringify(nextCache));
       eventCacheListeners.forEach((listener) => listener());
     } catch (error) {
       console.warn("Cache event admin tidak dapat disimpan.", error);
@@ -231,26 +233,41 @@ function useEventCache() {
 export default function AdminEventsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [eventCache, updateEventCache] = useEventCache();
-  const { nearEvent, events } = eventCache;
+  const { nearEvents, events } = eventCache;
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null);
   const [pendingDelete, setPendingDelete] = useState<EventItem | null>(null);
   const [uploadError, setUploadError] = useState("");
+  const [validationMessage, setValidationMessage] = useState<string[]>([]);
   const [form, setForm] = useState({ name: "", date: "", description: "", capacity: "", price: "", image: "" });
 
-  function handleImageUpload(file: File | undefined) {
+  async function handleImageUpload(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setUploadError("Pilih file gambar yang valid.");
       return;
     }
-    setUploadError("");
-    setForm((current) => ({ ...current, image: URL.createObjectURL(file) }));
+    try {
+      const bitmap = await createImageBitmap(file);
+      const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas tidak tersedia.");
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      setForm((current) => ({ ...current, image: canvas.toDataURL("image/jpeg", 0.82) }));
+      setUploadError("");
+    } catch {
+      setUploadError("Gambar tidak dapat diproses. Coba pilih gambar lain.");
+    }
   }
 
   function openCreateForm() {
     setEditingEvent(null);
     setForm({ name: "", date: "", description: "", capacity: "", price: "", image: "" });
     setUploadError("");
+    setValidationMessage([]);
     setIsFormOpen(true);
   }
 
@@ -265,14 +282,31 @@ export default function AdminEventsPage() {
       image: item.image,
     });
     setUploadError("");
+    setValidationMessage([]);
     setIsFormOpen(true);
   }
 
   function saveEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!form.name.trim() || !form.date) return;
+    const missingFields = [
+      ["Nama event", form.name],
+      ["Tanggal kegiatan", form.date],
+      ["Tentang kegiatan", form.description],
+      ["Gambar event", form.image],
+      ["Kuota", form.capacity],
+      ["Harga tiket", form.price],
+    ]
+      .filter(([, value]) => !value.trim())
+      .map(([label]) => label);
+    if (missingFields.length > 0) {
+      setValidationMessage(missingFields);
+      return;
+    }
     const parsedDate = parseEventDate(form.date);
-    if (!parsedDate) return;
+    if (!parsedDate) {
+      setValidationMessage(["Tanggal kegiatan (format tidak valid)"]);
+      return;
+    }
     const savedEvent: EventItem = {
       id: editingEvent?.id ?? Date.now(),
       ...form,
@@ -283,8 +317,11 @@ export default function AdminEventsPage() {
       image: form.image.trim() || taritopeng,
     };
     if (editingEvent) {
-      if (nearEvent?.id === editingEvent.id) {
-        updateEventCache((current) => ({ ...current, nearEvent: savedEvent }));
+      if (nearEvents.some((item) => item.id === editingEvent.id)) {
+        updateEventCache((current) => ({
+          ...current,
+          nearEvents: current.nearEvents.map((item) => item.id === savedEvent.id ? savedEvent : item),
+        }));
       } else {
         updateEventCache((current) => ({
           ...current,
@@ -292,18 +329,25 @@ export default function AdminEventsPage() {
         }));
       }
     } else {
-      updateEventCache((current) => ({ ...current, events: [...current.events, savedEvent] }));
+      updateEventCache((current) => ({
+        ...current,
+        nearEvents: [...current.nearEvents, savedEvent],
+      }));
     }
     setForm({ name: "", date: "", description: "", capacity: "", price: "", image: "" });
     setEditingEvent(null);
     setUploadError("");
+    setValidationMessage([]);
     setIsFormOpen(false);
   }
 
   function deleteEvent() {
     if (!pendingDelete) return;
-    if (nearEvent?.id === pendingDelete.id) {
-      updateEventCache((current) => ({ ...current, nearEvent: null }));
+    if (nearEvents.some((item) => item.id === pendingDelete.id)) {
+      updateEventCache((current) => ({
+        ...current,
+        nearEvents: current.nearEvents.filter((item) => item.id !== pendingDelete.id),
+      }));
     } else {
       updateEventCache((current) => ({
         ...current,
@@ -313,11 +357,10 @@ export default function AdminEventsPage() {
     setPendingDelete(null);
   }
 
-  function moveNearEventToHistory() {
-    if (!nearEvent) return;
+  function moveNearEventToHistory(event: EventItem) {
     updateEventCache((current) => ({
-      nearEvent: null,
-      events: [...current.events, nearEvent],
+      nearEvents: current.nearEvents.filter((item) => item.id !== event.id),
+      events: [...current.events, event],
     }));
   }
 
@@ -333,7 +376,7 @@ export default function AdminEventsPage() {
 
         <main className="event-main">
           <UpcomingEventSection
-            event={nearEvent}
+            events={nearEvents}
             onCreate={openCreateForm}
             onEdit={openEditForm}
             onDelete={setPendingDelete}
@@ -349,15 +392,15 @@ export default function AdminEventsPage() {
 
       {isFormOpen && (
         <div className="event-overlay" onMouseDown={(e) => e.target === e.currentTarget && setIsFormOpen(false)}>
-          <form className="event-dialog" role="dialog" aria-modal="true" aria-labelledby="event-dialog-title" onSubmit={saveEvent}>
+          <form className="event-dialog" noValidate role="dialog" aria-modal="true" aria-labelledby="event-dialog-title" onSubmit={saveEvent}>
             <div className="event-dialog-heading">
               <h2 id="event-dialog-title">{editingEvent ? "Edit Event" : "Tambah Event"}</h2>
               <button type="button" className="close-dialog" onClick={() => setIsFormOpen(false)} aria-label="Tutup">
                 <X size={20} />
               </button>
             </div>
-            <label>Nama event<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-            <label>Tanggal kegiatan<input type={editingEvent && !isValidCalendarDate(editingEvent.dateOrder) ? "text" : "date"} placeholder="contoh: 31 Februari" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
+            <label>Nama event<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+            <label>Tanggal kegiatan<input type={editingEvent && !isValidCalendarDate(editingEvent.dateOrder) ? "text" : "date"} placeholder="contoh: 31 Februari" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
             <label>Tentang kegiatan<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
             <label>{form.image ? "Gambar telah ter-upload" : "Unggah gambar"}<input type="file" accept="image/*" onChange={(e) => handleImageUpload(e.currentTarget.files?.[0])} /></label>
             {uploadError && <p className="upload-error" role="alert">{uploadError}</p>}
@@ -368,6 +411,21 @@ export default function AdminEventsPage() {
             </div>
             <button type="submit" className="save-event">{editingEvent ? "Simpan perubahan" : "Simpan event"}</button>
           </form>
+        </div>
+      )}
+
+      {validationMessage.length > 0 && (
+        <div className="event-overlay" onMouseDown={(e) => e.target === e.currentTarget && setValidationMessage([])}>
+          <div className="event-dialog alert-dialog" role="alertdialog" aria-modal="true" aria-labelledby="validation-dialog-title">
+            <h2 id="validation-dialog-title">Data belum lengkap</h2>
+            <p>Mohon lengkapi bagian berikut sebelum menyimpan:</p>
+            <ul>
+              {validationMessage.map((field) => <li key={field}>{field}</li>)}
+            </ul>
+            <div className="delete-actions">
+              <button type="button" className="confirm-delete" onClick={() => setValidationMessage([])}>Lengkapi data</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -413,6 +471,7 @@ export default function AdminEventsPage() {
         .featured-event,.history-card { animation:event-rise .55s cubic-bezier(.2,.7,.2,1) both; }
         .featured-event:hover,.history-card:hover { translate:0 -4px; border-color:rgba(200,132,36,.55); box-shadow:0 10px 24px rgba(31,24,18,.16); }
         .featured-event { position:relative; min-height:286px; padding:17px 21px 20px; }
+        .featured-event + .featured-event { margin-top:18px; }
         .featured-heading { margin:0 0 15px; padding-right:86px; }
         .featured-empty { min-height:286px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; color:var(--event-muted); }
         .featured-empty h2 { margin:6px 0 0; color:#563327; font-size:15px; font-weight:600; }
@@ -455,8 +514,9 @@ export default function AdminEventsPage() {
         .history-stats { min-height:108px; display:flex; flex-direction:column; justify-content:center; gap:10px; padding:15px 20px; border:1px solid #d2c5b4; border-radius:17px; background:var(--event-cream); box-shadow:0 1px 5px rgba(0,0,0,.22); }
         .event-overlay { position:fixed; inset:0; z-index:30; display:grid; place-items:center; padding:18px; background:rgba(35,22,16,.56); animation:event-fade .2s ease both; }
         .event-dialog { width:min(460px,100%); padding:23px; border-radius:14px; background:var(--event-cream); box-shadow:0 14px 45px rgba(0,0,0,.24); }
-        .delete-dialog h2 { margin:0; color:var(--event-brown); font-size:20px; font-weight:600; }
-        .delete-dialog p { margin:12px 0 20px; color:var(--event-muted); font-size:13px; }
+        .delete-dialog h2,.alert-dialog h2 { margin:0; color:var(--event-brown); font-size:20px; font-weight:600; }
+        .delete-dialog p,.alert-dialog p { margin:12px 0 20px; color:var(--event-muted); font-size:13px; }
+        .alert-dialog ul { margin:-10px 0 20px; padding-left:20px; color:var(--event-muted); font-size:13px; }
         .delete-actions { display:flex; justify-content:flex-end; gap:9px; }
         .delete-actions button { min-height:38px; padding:0 14px; border-radius:7px; font:500 12px Poppins,sans-serif; cursor:pointer; }
         .cancel-delete { border:1px solid #d9c9b6; background:transparent; color:var(--event-brown); }
