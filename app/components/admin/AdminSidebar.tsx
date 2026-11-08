@@ -8,7 +8,7 @@ const ITEMS = [
   { label: "Umkm", route: "umkm", href: "/admin/umkm" },
   { label: "Event", route: "events", href: "/admin/events" },
   { label: "Paket Kunjungan", route: "paket", href: "/admin/paket" },
-  { label: "Data User", route: "users", href: "/admin/users" },
+  { label: "Data User", route: "data-user", href: "/admin/data-user" },
 ] as const;
 
 export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
@@ -98,8 +98,18 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
             <Link
               key={route}
               href={href}
-              className={`nav-link${route === activeRoute ? " active" : ""}`}
-              aria-current={route === activeRoute ? "page" : undefined}
+              className={`nav-link${
+                route === activeRoute ||
+                (route === "data-user" && (activeRoute === "users" || activeRoute === "data-user"))
+                  ? " active"
+                  : ""
+              }`}
+              aria-current={
+                route === activeRoute ||
+                (route === "data-user" && (activeRoute === "users" || activeRoute === "data-user"))
+                  ? "page"
+                  : undefined
+              }
               onClick={() => setMenuOpen(false)}
               tabIndex={isMobile && !menuOpen ? -1 : undefined}
             >

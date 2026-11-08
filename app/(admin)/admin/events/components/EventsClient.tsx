@@ -494,8 +494,8 @@ export default function AdminEventsPage() {
         .event-description h3,.history-copy h4 { margin:0 0 10px; font-size:11px; line-height:1.4; font-weight:600; }
         .event-description > p,.history-description { margin:0; color:#51443c; font-size:9px; line-height:1.55; }
         .featured-stats { display:flex; flex-direction:column; gap:12px; margin-top:14px; }
-        .add-event { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:0 14px; border:0; border-radius:8px; background:var(--event-brown); color:#fff8ec; box-shadow:0 2px 7px rgba(31,24,18,.18); font:500 12px Poppins,sans-serif; cursor:pointer; transition:transform .2s,box-shadow .2s,background .2s; }
-        .add-event:hover { transform:translateY(-2px); background:#623b2b; box-shadow:0 5px 11px rgba(0,0,0,.2); }
+        .add-event { min-height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:0 14px; border:0; border-radius:8px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); box-shadow:0 2px 7px rgba(31,24,18,.18); font:500 12px Poppins,sans-serif; cursor:pointer; transition:transform .2s,box-shadow .2s,background .2s; }
+        .add-event:hover { transform:translateY(-2px); background:var(--admin-button-primary-hover); box-shadow:0 5px 11px rgba(0,0,0,.2); }
         :global(.card-actions) { display:flex; align-items:center; gap:6px; }
         :global(.card-actions button) { width:32px; height:32px; display:grid; place-items:center; padding:0; border:1px solid #d8cbb9; border-radius:7px; background:#fffaf1; color:#563327; cursor:pointer; transition:background .18s,color .18s,transform .18s; }
         :global(.card-actions button:hover) { transform:translateY(-1px); background:#f3e7d3; color:#8d3b28; }
@@ -533,7 +533,8 @@ export default function AdminEventsPage() {
         .upload-error { margin:7px 0 0; color:#b3261e; font-size:12px; }
         :global(.upload-preview) { display:block; width:100%; height:150px; margin-top:9px; object-fit:cover; border-radius:8px; }
         .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .save-event { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--event-brown); color:white; font:500 13px Poppins,sans-serif; cursor:pointer; }
+        .save-event { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 13px Poppins,sans-serif; cursor:pointer; transition:background .2s; }
+        .save-event:hover { background:var(--admin-button-primary-hover); }
         @media (min-width:1200px) { .event-main { padding-right:38px; padding-left:28px; } }
         @media (max-width:850px) {
           .event-main { padding:26px 20px 36px; }

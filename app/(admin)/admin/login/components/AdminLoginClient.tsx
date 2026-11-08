@@ -123,7 +123,7 @@ export default function AdminLoginClient() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full rounded-full bg-[#C49A4A] py-2.5 text-sm font-bold text-white shadow-md transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-full bg-[var(--admin-button-primary)] py-2.5 text-sm font-bold text-[var(--admin-button-primary-text)] shadow-md transition-colors hover:bg-[var(--admin-button-primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? "Memproses..." : "Login"}
       </button>

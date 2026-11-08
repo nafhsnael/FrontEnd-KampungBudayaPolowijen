@@ -372,12 +372,11 @@ const hapusJ = () => {
         .far ul { font-size:11px; }
         .far li:nth-child(n+4), .far .tb, .far .tombol, .far small { display:none; }
 
-        .ambil { margin-top:0; align-self:stretch; background:var(--cream); color:var(--brown); border:1px solid var(--brown); border-radius:999px; padding:9px 0; font:600 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.2); transition:transform .2s; }
+        .ambil { margin-top:0; align-self:stretch; background:var(--admin-button-primary); color:var(--admin-button-primary-text); border:1px solid var(--admin-button-primary); border-radius:999px; padding:9px 0; font:600 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.2); transition:transform .2s,background .2s; }
         .tombol { margin-top:auto; padding-top:14px; display:flex; flex-direction:column; gap:8px; }
         .edit { display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0; background:transparent; border:1px solid var(--cream); color:var(--cream); border-radius:999px; font:500 13px Poppins,sans-serif; cursor:pointer; transition:background .2s,color .2s; }
         .edit:hover { background:var(--cream); color:var(--brown); }
-        .mid .ambil { background:var(--gold); border-color:var(--gold); }
-        .ambil:hover { transform:translateY(-1px); }
+        .ambil:hover { transform:translateY(-1px); background:var(--admin-button-primary-hover); border-color:var(--admin-button-primary-hover); }
         .arr { flex:none; z-index:5; width:32px; height:32px; border-radius:50%; border:0; background:var(--brown); color:#fff; font-size:20px; line-height:1; cursor:pointer; transition:transform .2s; }
         .arr:hover { transform:scale(1.12); }
 
@@ -400,8 +399,8 @@ const hapusJ = () => {
         .jinfo span { color:#9d8978; font-size:10px; line-height:1.45; }
         .jinfo strong { color:#48291d; font-size:12px; font-weight:600; line-height:1.45; }
         .jhead { display:flex; align-items:center; justify-content:space-between; margin:0 0 13px 12px; }
-.tbh { display:flex; align-items:center; gap:8px; padding:10px 18px; border:0; border-radius:8px; background:var(--brown); color:var(--cream); font:500 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25); transition:transform .2s; }
-.tbh:hover { transform:translateY(-1px); }
+.tbh { display:flex; align-items:center; gap:8px; padding:10px 18px; border:0; border-radius:8px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 13px Poppins,sans-serif; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.25); transition:transform .2s,background .2s; }
+.tbh:hover { transform:translateY(-1px); background:var(--admin-button-primary-hover); }
 .jcard { position:relative; }
 .jaksi { position:absolute; top:14px; right:20px; display:flex; gap:8px; z-index:2; }
 .jaksi button { display:grid; place-items:center; width:30px; height:30px; border:1px solid #d2c5b4; border-radius:7px; background:var(--cream); color:var(--brown); cursor:pointer; transition:background .2s,color .2s; }
@@ -430,7 +429,8 @@ const hapusJ = () => {
         .dialog input:focus, .dialog textarea:focus { outline:2px solid #c88424; outline-offset:1px; }
         .pratinjau { height:150px; margin-top:9px; border-radius:8px; background:#6b4a3a center/cover; }
         .err { margin:7px 0 0; color:#b3261e; font-size:12px; }
-        .simpan { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
+        .simpan { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 13px Poppins,sans-serif; cursor:pointer; transition:background .2s; }
+        .simpan:hover { background:var(--admin-button-primary-hover); }
 
         /* ---------- Isi popup pemesanan ---------- */
         .hg { margin:0 0 4px; color:var(--gold2); font-size:13px; font-weight:600; }
@@ -439,7 +439,8 @@ const hapusJ = () => {
         .bayar { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
         .dialog .opsi { display:flex; align-items:center; gap:8px; margin:0; padding:9px 12px; border:1px solid var(--line); border-radius:7px; background:#fffdf9; color:var(--ink); font-size:13px; cursor:pointer; transition:background .25s,border-color .25s; }
         .dialog .opsi.on { border-color:var(--gold); background:#fdf1d4; }
-        .utama { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--brown); color:#fff; font:500 13px Poppins,sans-serif; cursor:pointer; }
+        .utama { width:100%; margin-top:20px; padding:10px; border:0; border-radius:7px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 13px Poppins,sans-serif; cursor:pointer; transition:background .2s; }
+        .utama:hover:not(:disabled) { background:var(--admin-button-primary-hover); }
         .utama:disabled { opacity:.45; cursor:not-allowed; }
         .sukses { text-align:center; }
         .ok { width:60px; height:60px; margin:0 auto 10px; border-radius:50%; background:var(--gold); color:var(--brown); font-size:30px; display:grid; place-items:center; }

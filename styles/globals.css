@@ -3,6 +3,13 @@
 
 :root {
   --font-jakarta: "Plus Jakarta Sans", sans-serif;
+  --admin-button-primary: #4a2a1f;
+  --admin-button-primary-hover: #623b2b;
+  --admin-button-primary-text: #fff8ec;
+  --admin-status-danger: #ad5145;
+  --admin-status-danger-hover: #9b3d32;
+  --admin-status-success: #4f7958;
+  --admin-status-success-hover: #426949;
 }
 
 *,
@@ -53,4 +60,3 @@ body {
 .peer:checked ~ div svg {
   display: block;
 }
-

@@ -71,7 +71,7 @@ export default function UsersHeaderSection({
                     }}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition ${
                       filter === option
-                        ? "bg-[#FAF3E0] text-[#3D2018]"
+                        ? "bg-[var(--admin-button-primary)] text-[var(--admin-button-primary-text)]"
                         : "text-[#6F6259] hover:bg-[#F8F2EA]"
                     }`}
                   >

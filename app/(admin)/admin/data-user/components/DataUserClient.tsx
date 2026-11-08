@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Pencil, UserRound, X } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
-import DataUserHeaderSection from "./DataUserHeaderSection";
-import DataUserSummarySection from "./DataUserSummarySection";
+import AdminUsersHeader from "@/app/components/admin/AdminUsersHeader";
+import AdminUsersList from "@/app/components/admin/AdminUsersList";
 
 import {
   fetchUsersFromApi,
@@ -12,7 +11,6 @@ import {
   toggleUserStatusApi,
   type UserRecord,
   type UserStatus,
-  type UserAccess,
 } from "@/services/users";
 
 type UserCache = {
@@ -72,7 +70,6 @@ function isUserCache(value: unknown): value is UserCache {
 }
 
 async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string | null }> {
-  // 1. Coba ambil dari Backend API
   try {
     const apiUsers = await fetchUsersFromApi();
     if (apiUsers && apiUsers.length > 0) {
@@ -80,11 +77,9 @@ async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string |
       return { users: apiUsers, warning: null };
     }
   } catch (apiErr) {
-    // Backend offline / error / demo session, lanjut ke cache / fallback
     console.warn("Backend API tidak dapat dijangkau, menggunakan data cache / lokal:", apiErr);
   }
 
-  // 2. Cek memori cache
   if (memoryCache && memoryCache.expiresAt > Date.now()) {
     return {
       users: memoryCache.users.map((user) => ({ ...user })),
@@ -94,7 +89,6 @@ async function fetchUserData(): Promise<{ users: UserRecord[]; warning: string |
 
   let warning: string | null = null;
 
-  // 3. Cek localStorage
   if (typeof window !== "undefined") {
     try {
       const cachedValue = window.localStorage.getItem(USER_CACHE_KEY);
@@ -142,16 +136,14 @@ function useUserData() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cacheWarning, setCacheWarning] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     fetchUserData()
-      .then(({ users: fetchedUsers, warning }) => {
+      .then(({ users: fetchedUsers }) => {
         if (!isMounted) return;
         setUsers(fetchedUsers);
-        setCacheWarning(warning);
       })
       .catch((fetchError: unknown) => {
         if (!isMounted) return;
@@ -172,14 +164,12 @@ function useUserData() {
 
   const updateUser = useCallback(
     (updatedUser: UserRecord) => {
-      // Optimistic update
       const nextUsers = users.map((user) =>
         String(user.id) === String(updatedUser.id) ? { ...updatedUser } : user,
       );
       setUsers(nextUsers);
-      setCacheWarning(cacheUserData(nextUsers));
+      cacheUserData(nextUsers);
 
-      // Kirim pembaruan ke Backend API
       updateUserApi(updatedUser.id, updatedUser).catch((err) => {
         console.warn("Sinkronisasi update ke backend gagal:", err);
       });
@@ -206,14 +196,13 @@ function useUserData() {
     [updateUser, users],
   );
 
-  return { users, isLoading, error, cacheWarning, updateUser, toggleStatus };
+  return { users, isLoading, error, updateUser, toggleStatus };
 }
 
 export default function AdminDataUserPage() {
-  const { users, isLoading, error, cacheWarning, updateUser, toggleStatus } = useUserData();
+  const { users, isLoading, error, updateUser, toggleStatus } = useUserData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"Semua" | UserStatus>("Semua");
-  const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [draft, setDraft] = useState<UserRecord | null>(null);
 
   const filteredUsers = useMemo(() => {
@@ -231,12 +220,10 @@ export default function AdminDataUserPage() {
   }, [searchTerm, statusFilter, users]);
 
   const openEdit = useCallback((user: UserRecord) => {
-    setEditingUser(user);
     setDraft({ ...user });
   }, []);
 
   const closeEdit = useCallback(() => {
-    setEditingUser(null);
     setDraft(null);
   }, []);
 
@@ -252,131 +239,38 @@ export default function AdminDataUserPage() {
 
   return (
     <>
-      <div className="flex min-h-screen bg-[#FAF3E0] font-sans text-[#3D2018]">
-        <AdminSidebar activeRoute="users" />
+      <div className="flex min-h-screen bg-[#F5F4F0] font-sans text-[#342D27]">
+        <AdminSidebar activeRoute="data-user" />
 
-        <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <section className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-[#E8DDD1] bg-[#FDF8F2] shadow-md">
-            <DataUserHeaderSection
-              searchTerm={searchTerm}
-              statusFilter={statusFilter}
-              onSearchChange={setSearchTerm}
-              onStatusFilterChange={setStatusFilter}
-            />
-            <DataUserSummarySection
-              visibleCount={filteredUsers.length}
-              totalCount={users.length}
-              isLoading={isLoading}
-              cacheWarning={cacheWarning}
-              error={error}
-            />
+        <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:gap-8">
+            <section className="overflow-hidden rounded-2xl border border-[#EAE0CE] bg-[#FAF3E0] shadow-sm">
+              <AdminUsersHeader
+                searchTerm={searchTerm}
+                statusFilter={statusFilter}
+                visibleCount={filteredUsers.length}
+                totalCount={users.length}
+                isLoading={isLoading}
+                onSearchChange={setSearchTerm}
+                onStatusFilterChange={setStatusFilter}
+              />
 
-            <div className="space-y-2.5 px-4 pb-5 sm:px-7 sm:pb-7">
-              {!isLoading && !error && filteredUsers.map((user) => (
-                <article
-                  key={user.id}
-                  className="grid gap-4 rounded-2xl border border-[#E8DDD1] bg-[#FDF8F2] p-4 transition-shadow hover:shadow-sm lg:grid-cols-[minmax(70px,0.45fr)_minmax(150px,1.2fr)_minmax(190px,1.5fr)_minmax(130px,1fr)_minmax(105px,0.75fr)_minmax(110px,0.8fr)_minmax(175px,1fr)] lg:items-center"
-                >
-                  <div className="flex items-center gap-3 lg:block">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#E8DDD1] bg-[#F4EADD] text-xs font-semibold text-[#765A42]">
-                      {String(user.id).padStart(2, "0")}
-                    </span>
-                    <span className="text-[10px] font-medium uppercase tracking-wide text-[#8A7B70] lg:hidden">
-                      ID
-                    </span>
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#3D2018]">{user.role}</p>
-                    <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#9B3D32]">
-                      {user.access}
-                    </p>
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-[#9A8B7D] lg:hidden">
-                      Email
-                    </p>
-                    <p className="truncate text-xs text-[#5E5149]" title={user.email}>{user.email}</p>
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-[#9A8B7D] lg:hidden">
-                      Username
-                    </p>
-                    <p className="flex min-w-0 items-center gap-1.5 text-xs text-[#6E6158]">
-                      <UserRound size={13} className="shrink-0 text-[#A88B7A]" aria-hidden="true" />
-                      <span className="truncate">{user.username}</span>
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-[#9A8B7D] lg:hidden">
-                      Role tag
-                    </p>
-                    <span className="inline-flex rounded-full bg-[#F0E8DE] px-2.5 py-1 text-[10px] font-medium capitalize text-[#755C49]">
-                      {user.access}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-[#9A8B7D] lg:hidden">
-                      Status
-                    </p>
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                        user.status === "Aktif"
-                          ? "bg-[#E8F2E9] text-[#4F7958]"
-                          : "bg-[#F9E9E6] text-[#AD5145]"
-                      }`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${user.status === "Aktif" ? "bg-[#4F7958]" : "bg-[#AD5145]"}`} />
-                      {user.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-start gap-2 lg:justify-end">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(user)}
-                      aria-label={`Edit data ${user.username}`}
-                      className="inline-flex items-center gap-1 rounded-full bg-[#55765D] px-3 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#45644D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55765D]"
-                    >
-                      <Pencil size={11} aria-hidden="true" />
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleStatus(user.id)}
-                      aria-pressed={user.status === "Suspended"}
-                      aria-label={user.status === "Aktif" ? `Suspend ${user.username}` : `Aktifkan ${user.username}`}
-                      className={`rounded-full px-3 py-1.5 text-[10px] font-semibold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                        user.status === "Aktif"
-                          ? "bg-[#B85D50] hover:bg-[#A84F43]"
-                          : "bg-[#55765D] hover:bg-[#45644D]"
-                      }`}
-                    >
-                      {user.status === "Aktif" ? "Suspend" : "Aktifkan"}
-                    </button>
-                  </div>
-                </article>
-              ))}
-
-              {!isLoading && !error && filteredUsers.length === 0 && (
-                <div className="flex min-h-44 flex-col items-center justify-center rounded-2xl border border-dashed border-[#D1C7BD] px-5 py-10 text-center">
-                  <UserRound size={28} className="mb-3 text-[#C8B9AA]" aria-hidden="true" />
-                  <p className="text-sm font-medium text-[#3D2018]">Pengguna tidak ditemukan</p>
-                  <p className="mt-1 text-xs text-[#8A7B70]">Coba kata kunci atau filter status lain.</p>
-                </div>
-              )}
-            </div>
-          </section>
+              <AdminUsersList
+                users={filteredUsers}
+                isLoading={isLoading}
+                error={error}
+                emptyMessage="Tidak ada user yang cocok dengan pencarian atau filter."
+                onEdit={openEdit}
+                onToggleStatus={toggleStatus}
+              />
+            </section>
+          </div>
         </main>
       </div>
 
-      {editingUser && draft && (
+      {draft && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D1B14]/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#25211D]/50 p-4 backdrop-blur-sm"
           role="presentation"
           onMouseDown={(event) => event.target === event.currentTarget && closeEdit()}
         >
@@ -384,7 +278,7 @@ export default function AdminDataUserPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-user-title"
-            className="w-full max-w-xl rounded-3xl border border-[#D1C7BD] bg-[#FDF8F2] p-5 shadow-2xl sm:p-7"
+            className="w-full max-w-xl rounded-3xl border border-[#E5DAC8] bg-[#FAF6EE] p-5 shadow-2xl sm:p-7"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
@@ -394,54 +288,54 @@ export default function AdminDataUserPage() {
               <button
                 type="button"
                 onClick={closeEdit}
-                className="rounded-full border border-[#D1C7BD] p-2 text-[#3D2018] transition hover:bg-white"
                 aria-label="Tutup modal"
+                className="rounded-full border border-[#D8CDBC] bg-[#F5EDE0]/60 px-3 py-1.5 text-sm text-[#3D2018] transition hover:bg-[#F5EDE0]"
               >
-                <X size={16} aria-hidden="true" />
+                Tutup
               </button>
             </div>
 
             <form onSubmit={saveUser} className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
-                Nama / Role
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
+                Role
                 <input
                   required
                   value={draft.role}
                   onChange={(event) => setDraft({ ...draft, role: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Username
                 <input
                   required
                   value={draft.username}
                   onChange={(event) => setDraft({ ...draft, username: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149] sm:col-span-2">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F] sm:col-span-2">
                 Email
                 <input
                   required
                   type="email"
                   value={draft.email}
                   onChange={(event) => setDraft({ ...draft, email: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Akses
                 <select
                   value={draft.access}
                   disabled
-                  className="rounded-xl border border-[#E0DBD5] bg-[#F0EDEA] px-3 py-2.5 text-sm text-[#9A9188] outline-none cursor-not-allowed"
+                  className="rounded-xl border border-[#E0DBD5] bg-[#EFE8DC] px-3.5 py-2.5 text-xs font-normal text-[#9A9188] outline-none cursor-not-allowed"
                 >
                   <option value="admin">Admin</option>
                   <option value="user">User</option>
                 </select>
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Status
                 <select
                   value={draft.status}
@@ -451,7 +345,7 @@ export default function AdminDataUserPage() {
                       setDraft({ ...draft, status });
                     }
                   }}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 >
                   <option value="Aktif">Aktif</option>
                   <option value="Suspended">Suspended</option>
@@ -461,13 +355,13 @@ export default function AdminDataUserPage() {
                 <button
                   type="button"
                   onClick={closeEdit}
-                  className="rounded-full border border-[#D1C7BD] px-5 py-2.5 text-xs font-semibold text-[#6D5D53] transition hover:bg-white"
+                  className="rounded-full border border-[#D8CDBC] px-5 py-2.5 text-xs font-semibold text-[#6D5D53] transition hover:bg-[#F5EDE0]"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-[#00B493] px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-[#00977F]"
+                  className="rounded-full bg-[#3D2018] px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#2A1610]"
                 >
                   Simpan
                 </button>

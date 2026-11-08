@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Building2, CalendarDays, MapPinned, Search, UsersRound } from "lucide-react";
+import { Building2, CalendarDays, MapPinned } from "lucide-react";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import AdminUsersHeader from "@/app/components/admin/AdminUsersHeader";
+import AdminUsersList from "@/app/components/admin/AdminUsersList";
 import DashboardHeroSection from "./DashboardHeroSection";
 import DashboardStatisticsSection from "./DashboardStatisticsSection";
 
@@ -140,17 +142,17 @@ export default function AdminDashboardPage() {
   const statistics = data?.statistics ?? STATISTICS;
   const [draft, setDraft] = useState<UserRecord | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"Semua" | UserStatus>("Semua");
 
   const filteredUsers = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
-    if (!query) return users;
-
     return users.filter((user) =>
-      `${user.role} ${user.email} ${user.username} ${user.access} ${user.status}`
+      (statusFilter === "Semua" || user.status === statusFilter) &&
+      (!query || `${user.role} ${user.email} ${user.username} ${user.access} ${user.status}`
         .toLowerCase()
-        .includes(query),
+        .includes(query)),
     );
-  }, [searchTerm, users]);
+  }, [searchTerm, statusFilter, users]);
 
   function openEdit(user: UserRecord) {
     setDraft({ ...user });
@@ -188,124 +190,25 @@ export default function AdminDashboardPage() {
             <DashboardHeroSection />
             <DashboardStatisticsSection statistics={statistics} />
 
-            <section className="overflow-hidden rounded-2xl border border-[#E9E5DD] bg-white shadow-sm">
-              <header className="flex flex-col gap-3 border-b border-[#EEEAE4] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F8EFE1] text-[#A77932]">
-                    <UsersRound size={19} aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h2 className="text-base font-semibold text-[#342D27] sm:text-lg">Data User</h2>
-                    <p className="mt-0.5 text-xs text-[#8A8178]">Ringkasan akun dan hak akses</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                  <label className="flex items-center gap-2 rounded-full border border-[#E9E5DD] bg-white px-3 py-2 text-[#827970] focus-within:border-[#C59B4E]">
-                    <Search size={14} aria-hidden="true" />
-                    <span className="sr-only">Cari user</span>
-                    <input
-                      type="search"
-                      value={searchTerm}
-                      onChange={(event) => setSearchTerm(event.target.value)}
-                      placeholder="Cari user..."
-                      className="w-full bg-transparent text-xs text-[#342D27] outline-none placeholder:text-[#A59D94] sm:w-36"
-                    />
-                  </label>
-                  <span className="w-fit rounded-full bg-[#F5F4F0] px-3 py-1.5 text-xs font-medium text-[#71685F]">
-                  {users.length} pengguna
-                  </span>
-                </div>
-              </header>
+            <section className="overflow-hidden rounded-2xl border border-[#EAE0CE] bg-[#FAF3E0] shadow-sm">
+              <AdminUsersHeader
+                searchTerm={searchTerm}
+                statusFilter={statusFilter}
+                visibleCount={filteredUsers.length}
+                totalCount={users.length}
+                isLoading={isLoading}
+                onSearchChange={setSearchTerm}
+                onStatusFilterChange={setStatusFilter}
+              />
 
-              <div className="overflow-x-auto p-3 sm:p-5">
-                <table className="w-full min-w-[960px] table-fixed border-separate border-spacing-0 text-left text-xs text-[#514A43]">
-                  <colgroup>
-                    <col className="w-[7%]" />
-                    <col className="w-[16%]" />
-                    <col className="w-[23%]" />
-                    <col className="w-[17%]" />
-                    <col className="w-[11%]" />
-                    <col className="w-[11%]" />
-                    <col className="w-[15%]" />
-                  </colgroup>
-                  <thead className="bg-[#F7F6F2] text-[#766D64]">
-                    <tr>
-                      <th scope="col" className="rounded-l-xl border-b border-[#ECE8E1] px-3 py-3 font-semibold">No</th>
-                      <th scope="col" className="border-b border-[#ECE8E1] px-3 py-3 font-semibold">Role</th>
-                      <th scope="col" className="border-b border-[#ECE8E1] px-3 py-3 font-semibold">Email</th>
-                      <th scope="col" className="border-b border-[#ECE8E1] px-3 py-3 font-semibold">Username</th>
-                      <th scope="col" className="border-b border-[#ECE8E1] px-3 py-3 font-semibold">Akses</th>
-                      <th scope="col" className="border-b border-[#ECE8E1] px-3 py-3 font-semibold">Status</th>
-                      <th scope="col" className="rounded-r-xl border-b border-[#ECE8E1] px-3 py-3 text-right font-semibold">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isLoading ? (
-                      <tr>
-                        <td colSpan={7} className="px-3 py-8 text-center text-[#827970]">
-                          Memuat data user...
-                        </td>
-                      </tr>
-                    ) : error ? (
-                      <tr>
-                        <td colSpan={7} className="px-3 py-8 text-center text-[#AD5145]" role="alert">
-                          {error}
-                        </td>
-                      </tr>
-                    ) : filteredUsers.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="px-3 py-8 text-center text-[#827970]">
-                          Tidak ada user yang cocok dengan pencarian.
-                        </td>
-                      </tr>
-                    ) : filteredUsers.map((user) => (
-                      <tr key={user.id} className="transition-colors hover:bg-[#FAF9F6]">
-                        <td className="whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3 text-[#9A9188]">{String(user.id).padStart(2, "0")}</td>
-                        <td className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3 font-medium text-[#403932]">{user.role}</td>
-                        <td className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3">{user.email}</td>
-                        <td className="overflow-hidden text-ellipsis whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3">{user.username}</td>
-                        <td className="whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3 capitalize">{user.access}</td>
-                        <td className="whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                              user.status === "Aktif"
-                                ? "bg-[#E8F2E9] text-[#4F7958]"
-                                : "bg-[#F9E9E6] text-[#AD5145]"
-                            }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap border-b border-[#F0EDE8] px-3 py-3">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => openEdit(user)}
-                              aria-label={`Edit data ${user.username}`}
-                              className="rounded-full bg-[#55765D] px-3 py-1.5 text-[10px] font-semibold text-white transition hover:bg-[#45644D] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#55765D]"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => toggleStatus(user.id)}
-                              aria-pressed={user.status === "Suspended"}
-                              aria-label={user.status === "Aktif" ? `Suspend ${user.username}` : `Aktifkan ${user.username}`}
-                              className={`rounded-full px-3 py-1 text-[10px] font-semibold text-white transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                                user.status === "Aktif"
-                                  ? "bg-[#B85D50] hover:bg-[#A84F43]"
-                                  : "bg-[#55765D] hover:bg-[#45644D]"
-                              }`}
-                            >
-                              {user.status === "Aktif" ? "Suspe" : "Aktifkan"}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AdminUsersList
+                users={filteredUsers}
+                isLoading={isLoading}
+                error={error}
+                emptyMessage="Tidak ada user yang cocok dengan pencarian atau filter."
+                onEdit={openEdit}
+                onToggleStatus={toggleStatus}
+              />
             </section>
           </div>
         </main>
@@ -321,64 +224,64 @@ export default function AdminDashboardPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-user-title"
-            className="w-full max-w-xl rounded-3xl border border-[#E9E5DD] bg-white p-5 shadow-2xl sm:p-7"
+            className="w-full max-w-xl rounded-3xl border border-[#E5DAC8] bg-[#FAF6EE] p-5 shadow-2xl sm:p-7"
           >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#A77932]">Data pengguna</p>
-                <h2 id="edit-user-title" className="text-xl font-bold text-[#342D27]">Edit User</h2>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9B3D32]">Data pengguna</p>
+                <h2 id="edit-user-title" className="text-xl font-bold text-[#3D2018]">Edit User</h2>
               </div>
               <button
                 type="button"
                 onClick={closeEdit}
                 aria-label="Tutup modal"
-                className="rounded-full border border-[#D1C7BD] px-3 py-1.5 text-sm text-[#3D2018] transition hover:bg-white"
+                className="rounded-full border border-[#D8CDBC] bg-[#F5EDE0]/60 px-3 py-1.5 text-sm text-[#3D2018] transition hover:bg-[#F5EDE0]"
               >
                 Tutup
               </button>
             </div>
 
             <form onSubmit={saveUser} className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Role
                 <input
                   required
                   value={draft.role}
                   onChange={(event) => setDraft({ ...draft, role: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C59B4E] focus:ring-2 focus:ring-[#C59B4E]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Username
                 <input
                   required
                   value={draft.username}
                   onChange={(event) => setDraft({ ...draft, username: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C59B4E] focus:ring-2 focus:ring-[#C59B4E]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149] sm:col-span-2">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F] sm:col-span-2">
                 Email
                 <input
                   required
                   type="email"
                   value={draft.email}
                   onChange={(event) => setDraft({ ...draft, email: event.target.value })}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C59B4E] focus:ring-2 focus:ring-[#C59B4E]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Akses
                 <select
                   value={draft.access}
                   disabled
-                  className="rounded-xl border border-[#E0DBD5] bg-[#F0EDEA] px-3 py-2.5 text-sm text-[#9A9188] outline-none cursor-not-allowed"
+                  className="rounded-xl border border-[#E0DBD5] bg-[#EFE8DC] px-3.5 py-2.5 text-xs font-normal text-[#9A9188] outline-none cursor-not-allowed"
                 >
                   <option value="admin">Admin</option>
                   <option value="user">User</option>
                 </select>
               </label>
-              <label className="grid gap-1.5 text-xs font-medium text-[#5E5149]">
+              <label className="grid gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#75685F]">
                 Status
                 <select
                   value={draft.status}
@@ -388,7 +291,7 @@ export default function AdminDashboardPage() {
                       setDraft({ ...draft, status });
                     }
                   }}
-                  className="rounded-xl border border-[#D1C7BD] bg-white px-3 py-2.5 text-sm text-[#3D2018] outline-none focus:border-[#C59B4E] focus:ring-2 focus:ring-[#C59B4E]/20"
+                  className="rounded-xl border border-[#D8CDBC] bg-[#FFFDF7] px-3.5 py-2.5 text-xs font-normal text-[#3D2018] outline-none transition focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/20"
                 >
                   <option value="Aktif">Aktif</option>
                   <option value="Suspended">Suspended</option>
@@ -398,13 +301,13 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={closeEdit}
-                  className="rounded-full border border-[#D1C7BD] px-5 py-2.5 text-xs font-semibold text-[#6D5D53] transition hover:bg-white"
+                  className="rounded-full border border-[#D8CDBC] px-5 py-2.5 text-xs font-semibold text-[#6D5D53] transition hover:bg-[#F5EDE0]"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full bg-[#C59B4E] px-5 py-2.5 text-xs font-semibold text-[#3D2018] transition hover:bg-[#B58B3F]"
+                  className="rounded-full bg-[#3D2018] px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#2A1610]"
                 >
                   Simpan
                 </button>

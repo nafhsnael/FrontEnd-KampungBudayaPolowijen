@@ -224,8 +224,8 @@ export default function AdminUMKMPage() {
         .overview-divider { width:1px; height:54px; background:var(--umkm-line); }
         .category-stat { min-width:100px; }
         .overview-note { max-width:220px; margin:0 auto 0 0; color:var(--umkm-muted); font-size:12px; line-height:1.6; }
-        .add-business-button { min-height:42px; display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:9px; padding:0 15px; border:0; border-radius:7px; background:var(--umkm-brown); color:#fff8ec; font:500 12px Poppins,sans-serif; cursor:pointer; transition:background .2s,transform .2s; }
-        .add-business-button:hover { transform:translateY(-1px); background:#63402e; }
+        .add-business-button { min-height:42px; display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:9px; padding:0 15px; border:0; border-radius:7px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 12px Poppins,sans-serif; cursor:pointer; transition:background .2s,transform .2s; }
+        .add-business-button:hover { transform:translateY(-1px); background:var(--admin-button-primary-hover); }
         .directory-section { margin-top:30px; }
         .directory-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:18px; margin-bottom:13px; }
         .directory-heading .section-kicker { margin-bottom:4px; }
@@ -253,8 +253,8 @@ export default function AdminUMKMPage() {
         .row-actions { display:flex; justify-content:flex-end; gap:6px; }
         .row-action { width:31px; height:31px; display:grid; place-items:center; padding:0; border:1px solid transparent; border-radius:7px; cursor:pointer; transition:background .16s,transform .16s; }
         .row-action:hover { transform:translateY(-1px); }
-        .edit-action { background:#e4f2ed; color:#17806a; }
-        .edit-action:hover { background:#cde9df; }
+        .edit-action { background:#f0e8de; color:#755c49; }
+        .edit-action:hover { background:#e5d6c6; }
         .delete-action { background:#f9e9e5; color:#bd5148; }
         .delete-action:hover { background:#f2d7d1; }
         .empty-state { margin:0; padding:35px 20px; color:var(--umkm-muted); text-align:center; font-size:12px; }
@@ -272,7 +272,8 @@ export default function AdminUMKMPage() {
         .umkm-dialog input,.umkm-dialog select,.umkm-dialog textarea { width:100%; margin-top:5px; padding:10px; border:1px solid #ded1c1; border-radius:6px; background:#fff; color:var(--umkm-ink); font:400 12px Poppins,sans-serif; }
         .umkm-dialog textarea { resize:vertical; }
         .umkm-dialog input:focus,.umkm-dialog select:focus,.umkm-dialog textarea:focus { outline:2px solid #b7834d; outline-offset:1px; }
-        .save-business-button { width:100%; min-height:42px; margin-top:20px; border:0; border-radius:7px; background:var(--umkm-brown); color:#fff8ec; font:500 12px Poppins,sans-serif; cursor:pointer; }
+        .save-business-button { width:100%; min-height:42px; margin-top:20px; border:0; border-radius:7px; background:var(--admin-button-primary); color:var(--admin-button-primary-text); font:500 12px Poppins,sans-serif; cursor:pointer; transition:background .2s; }
+        .save-business-button:hover { background:var(--admin-button-primary-hover); }
         .delete-dialog > p:not(.section-kicker) { margin:11px 0 20px; color:var(--umkm-muted); font-size:13px; }
         .dialog-actions { display:flex; justify-content:flex-end; gap:9px; }
         .dialog-actions button { min-height:38px; padding:0 13px; border-radius:6px; font:500 11px Poppins,sans-serif; cursor:pointer; }
