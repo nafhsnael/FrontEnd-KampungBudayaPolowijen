@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { blobAsset } from "@/lib/blob-assets";
 
 export default function RegisterWelcomeSection() {
   return (
@@ -6,7 +7,7 @@ export default function RegisterWelcomeSection() {
       <div className="flex h-14 items-center gap-3">
         <div className="relative h-14 w-12 shrink-0 overflow-hidden">
           <Image
-            src="/images/logo2.png"
+            src={blobAsset("/images/logo2.png")}
             alt="Logo Kampung Budaya Polowijen"
             fill
             sizes="48px"

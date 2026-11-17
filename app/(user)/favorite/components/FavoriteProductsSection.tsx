@@ -4,7 +4,7 @@ import { Heart } from "lucide-react";
 export type FavoriteProduct = {
   id: string;
   name: string;
-  category: string;
+  category?: string;
   price: number;
   image: string;
 };
@@ -68,7 +68,9 @@ export default function FavoriteProductsSection({
           </div>
           <div className="p-3">
             <h2 className="truncate text-sm font-bold">{product.name}</h2>
-            <p className="mt-1 text-[10px] text-white/70">{product.category}</p>
+            {product.category && (
+              <p className="mt-1 text-[10px] text-white/70">{product.category}</p>
+            )}
             <p className="mt-1 text-xs font-semibold text-[#C49A4A]">
               Rp{product.price.toLocaleString("id-ID")}
             </p>

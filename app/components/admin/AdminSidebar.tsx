@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
+import { blobAsset } from "@/lib/blob-assets";
 
 const ITEMS = [
   { label: "Dashboard", route: "dashboard", href: "/admin/dashboard" },
@@ -58,7 +59,7 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
           className="mobile-brand"
           aria-label="Kampung Budaya Polowijen - Dashboard"
         >
-          <Image src="/images/logok.png" alt="" width={34} height={48} priority />
+          <Image src={blobAsset("/images/logok.png")} alt="" width={34} height={48} />
         </Link>
         {/* Invisible spacer to keep logo centered */}
         <span className="menu-toggle-spacer" aria-hidden="true" />
@@ -81,7 +82,7 @@ export default function AdminSidebar({ activeRoute }: { activeRoute: string }) {
       >
         <div className="sidebar-brand">
           <Link href="/admin/dashboard" aria-label="Kampung Budaya Polowijen - Dashboard">
-            <Image src="/images/logok.png" alt="" width={49} height={72} priority />
+            <Image src={blobAsset("/images/logok.png")} alt="" width={49} height={72} />
           </Link>
           <button
             type="button"

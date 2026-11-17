@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { blobAsset } from "@/lib/blob-assets";
 
 export default function LoginWelcomeSection() {
   return (
@@ -6,7 +7,7 @@ export default function LoginWelcomeSection() {
       <section aria-label="Identitas kampung budaya" className="flex items-center gap-3">
         <div className="flex h-14 w-12 items-center justify-center overflow-hidden rounded-full bg-transparent">
           <Image
-            src="/images/logo2.png"
+            src={blobAsset("/images/logo2.png")}
             alt="Logo Kampung Budaya Polowijen"
             width={48}
             height={56}

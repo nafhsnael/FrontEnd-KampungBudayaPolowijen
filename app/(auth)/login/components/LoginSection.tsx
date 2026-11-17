@@ -1,12 +1,13 @@
 import Image from "next/image";
-import LoginFormClient from "./LoginFormClient";
+import { blobAsset } from "@/lib/blob-assets";
+import LoginFormClient from "../LoginFormClient";
 
 export default function LoginSection() {
   return (
     <main className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#4A2920] px-5 py-10 max-[760px]:items-start">
       <div className="absolute inset-0" aria-hidden="true">
         <Image
-          src="/images/login.jpg"
+          src={blobAsset("/images/login.jpg")}
           alt=""
           fill
           priority

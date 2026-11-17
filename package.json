@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "npm run build && node --test",
+    "migrate:assets": "node scripts/migrate-public-assets.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.47.0",
@@ -19,6 +21,7 @@
     "@types/node": "^20.19.43",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19",
+    "@vercel/blob": "^2.9.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",

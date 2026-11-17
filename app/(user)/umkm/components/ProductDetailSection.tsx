@@ -39,7 +39,13 @@ export default function ProductDetailSection({
         >
           <ArrowLeft size={18} />
         </button>
-        <Image src={image} alt={name} fill sizes="100vw" className="object-cover" />
+        <Image
+          src={image}
+          alt={name}
+          fill
+          sizes="(max-width: 640px) 100vw, 420px"
+          className="object-cover"
+        />
       </div>
       <div className="grid grid-cols-4 gap-2 px-5 py-4">
         {gallery.slice(0, 4).map((galleryImage, index) => (
@@ -47,7 +53,13 @@ export default function ProductDetailSection({
             key={`${galleryImage}-${index}`}
             className="relative h-16 overflow-hidden rounded-lg border border-[#ead7b8]"
           >
-            <Image src={galleryImage} alt="" fill sizes="25vw" className="object-cover" />
+            <Image
+              src={galleryImage}
+              alt=""
+              fill
+              sizes="(max-width: 420px) 25vw, 105px"
+              className="object-cover"
+            />
           </div>
         ))}
       </div>

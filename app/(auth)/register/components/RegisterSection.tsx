@@ -12,6 +12,8 @@ import {
 	Mail,
 	UserRound,
 } from "lucide-react";
+import { blobAsset } from "@/lib/blob-assets";
+import { getApiErrorMessage } from "@/lib/api-error.mjs";
 import RegisterWelcomeSection from "./RegisterWelcomeSection";
 
 const GoogleIcon = () => (
@@ -104,9 +106,11 @@ export default function RegisterSection() {
 			);
 
 			if (!response.ok) {
-				const body = await response.json().catch(() => ({}));
 				throw new Error(
-					body?.message ?? "Pendaftaran belum dapat diproses. Silakan coba lagi."
+					await getApiErrorMessage(
+						response,
+						"Pendaftaran belum dapat diproses. Silakan coba lagi."
+					)
 				);
 			}
 
@@ -126,7 +130,7 @@ export default function RegisterSection() {
 		<main className="relative flex min-h-screen w-full items-center justify-center bg-[#4A2920] px-5 py-10 max-[760px]:items-start">
 			<div className="absolute inset-0" aria-hidden="true">
 				<Image
-					src="/images/login.jpg"
+					src={blobAsset("/images/login.jpg")}
 					alt=""
 					fill
 					priority

@@ -1,4 +1,5 @@
 import { getAuthSession } from "@/lib/auth/session";
+import { getApiErrorMessage } from "@/lib/api-error.mjs";
 
 export type UserStatus = "Aktif" | "Suspended";
 export type UserAccess = "admin" | "user";
@@ -45,14 +46,12 @@ export async function fetchUsersFromApi(filters?: {
   });
 
   if (!response.ok) {
-    let msg = `Gagal mengambil data user (status: ${response.status})`;
-    try {
-      const errJson = await response.json();
-      if (errJson && errJson.message) msg = errJson.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(msg);
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Gagal mengambil data user. Silakan coba lagi."
+      )
+    );
   }
 
   const json = await response.json();
@@ -92,14 +91,12 @@ export async function updateUserApi(
   });
 
   if (!response.ok) {
-    let msg = "Gagal memperbarui data user";
-    try {
-      const errJson = await response.json();
-      if (errJson && errJson.message) msg = errJson.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(msg);
+    throw new Error(
+      await getApiErrorMessage(
+        response,
+        "Gagal memperbarui data user. Silakan coba lagi."
+      )
+    );
   }
 
   const json = await response.json();

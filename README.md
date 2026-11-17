@@ -115,13 +115,13 @@ app/
 │   ├── layout/BottomNav.tsx
 │   └── ui/ConfirmModal.tsx
 ├── lib/
-│   └── auth/session.ts
+│   ├── auth/session.ts
+│   ├── blob-assets.ts
+│   └── blob-assets.generated.json
 ├── services/
 │   └── auth.ts
 ├── styles/
 │   └── globals.css
-├── public/
-│   └── images/
 ├── types/
 │   └── umkm.ts
 ├── favicon.ico
@@ -152,6 +152,44 @@ serta tetap menjadi tempat metadata atau pengambilan parameter route. Pertahanka
 `"use client"` pada komponen yang memakai state, event handler, atau browser API.
 Komponen lintas halaman tetap berada di `app/components/`.
 
+## Performa, SEO, dan rendering
+
+- Halaman beranda dan katalog memakai Server Component untuk shell dan data
+  produk; interaksi pencarian, filter, navigasi, dan favorit tetap berada di
+  Client Component. Data favorit dibaca setelah hydration agar markup server
+  dan client konsisten.
+- Data halaman yang tidak membutuhkan autentikasi tetap menggunakan rendering
+  default Next.js. Halaman favorit/dashboard, login, register, dan detail UMKM
+  yang masih berupa placeholder diberi `noindex`; autentikasi tetap dijaga oleh
+  route guard dan API, bukan oleh robots metadata.
+- Metadata Open Graph dan canonical memakai `NEXT_PUBLIC_SITE_URL` bila diatur.
+  Atur nilainya sebagai URL publik lengkap, misalnya
+  `https://kampungbudayapolowijen.example`. Di Vercel, domain project digunakan
+  sebagai fallback; saat lokal, fallback-nya `http://localhost:3000`.
+- `app/sitemap.ts` hanya memasukkan beranda dan katalog publik. `app/robots.ts`
+  mengizinkan crawling halaman publik dan mengecualikan `/api/`.
+- Structured data beranda diserialisasi dengan meng-escape karakter `<`.
+- Gambar menggunakan `next/image`; prioritas hanya diberikan ke gambar hero
+  login/registrasi dan slide awal dashboard, bukan semua gambar.
+
+Validasi frontend:
+
+```bash
+npx tsc --noEmit
+npm run lint
+npm run build
+```
+
+Untuk mengukur performa, jalankan production build dengan `npm run build`, lalu
+`npm run start`. Buka halaman di Chrome, pilih DevTools → Lighthouse, gunakan
+mode Mobile dan kategori Performance/SEO/Accessibility, lalu jalankan audit.
+Gunakan hasil Lighthouse untuk LCP dan CLS lab. INP adalah metrik field, jadi
+periksa URL produksi melalui PageSpeed Insights atau laporan Core Web Vitals
+Search Console; gunakan rekaman interaksi di panel Performance untuk mencari
+penyebab respons lambat. Lighthouse menampilkan Total Blocking Time sebagai
+diagnostik lab, bukan nilai INP. Targetnya LCP ≤ 2,5 s, INP ≤ 200 ms, dan
+CLS ≤ 0,1; hasil lab bukan jaminan data Core Web Vitals pengguna nyata.
+
 ## Autentikasi dan otorisasi
 
 - Login memanggil endpoint backend `POST /api/auth/login` melalui
@@ -173,11 +211,21 @@ Komponen lintas halaman tetap berada di `app/components/`.
   memerlukan autentikasi/otorisasi. Route katalog `/umkm` dan detailnya tetap
   publik.
 
-## Gambar statis
+## Aset gambar di Vercel Blob
 
-Simpan gambar yang dipakai aplikasi di `public/images/` dan referensikan
-melalui URL seperti `/images/logo.png` atau `/images/festivalkampung.jpeg`.
-Jangan impor gambar dari folder di luar `public/` untuk aset statis.
+Aset statis aplikasi disimpan di Vercel Blob. Atur `BLOB_READ_WRITE_TOKEN` dari
+Blob store Vercel di environment shell atau `.env.local`, lalu migrasikan aset
+lokal satu kali dari folder frontend:
+
+```bash
+npm run migrate:assets
+```
+
+Perintah ini mengunggah isi `public/` ke Blob, menulis URL publik ke
+`lib/blob-assets.generated.json`, lalu menghapus folder lokal hanya setelah
+semua unggahan berhasil. File yang memakai aset statis mengambil URL melalui
+`lib/blob-assets.ts`. Jangan hapus manifest hasil migrasi; manifest tersebut
+berisi URL yang dibutuhkan aplikasi saat build.
 
 ## Migrasi Pages Router
 
@@ -189,6 +237,6 @@ Untuk mengubah halaman lama:
    `EventsClient.tsx`) dan tambahkan `"use client"` sebagai baris pertama.
 3. Ganti `next/router` dengan `next/navigation`. Letakkan metadata di route
    Server Component, bukan di `next/head`.
-4. Pindahkan aset dari folder root `image/` ke `public/images/` dan ubah
-   referensinya menjadi URL absolut `/images/<nama-file>`.
+4. Simpan aset gambar di Vercel Blob dan gunakan `blobAsset()` dari
+   `lib/blob-assets.ts` untuk aset yang dikelola aplikasi.
 5. Hapus `pages/` setelah semua route dan referensinya dipindahkan.

@@ -1,4 +1,5 @@
 import type { UserRole } from "@/lib/auth/session";
+import { getApiErrorMessage } from "@/lib/api-error.mjs";
 
 type LoginResult = {
   accessToken: string;
@@ -89,22 +90,15 @@ async function parseLoginResponse(
   response: Response,
   fallbackError = "Email atau password salah."
 ): Promise<LoginResult> {
+  if (!response.ok) {
+    throw new Error(await getApiErrorMessage(response, fallbackError));
+  }
+
   let body: unknown;
   try {
     body = await response.json();
   } catch {
-    if (!response.ok) {
-      throw new Error(fallbackError);
-    }
     throw new Error("Respons login dari server tidak valid.");
-  }
-
-  if (!response.ok) {
-    const message =
-      isRecord(body) && typeof body.message === "string"
-        ? body.message
-        : fallbackError;
-    throw new Error(message);
   }
 
   const payload = isRecord(body) ? body.data : null;

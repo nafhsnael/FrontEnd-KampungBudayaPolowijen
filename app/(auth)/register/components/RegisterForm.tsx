@@ -12,6 +12,8 @@ import {
 	Mail,
 	UserRound,
 } from "lucide-react";
+import { blobAsset } from "@/lib/blob-assets";
+import { getApiErrorMessage } from "@/lib/api-error.mjs";
 
 const GoogleIcon = () => (
 	<svg
@@ -103,9 +105,11 @@ export default function RegisterPage() {
 			);
 
 			if (!response.ok) {
-				const body = await response.json().catch(() => ({}));
 				throw new Error(
-					body?.message ?? "Pendaftaran belum dapat diproses. Silakan coba lagi."
+					await getApiErrorMessage(
+						response,
+						"Pendaftaran belum dapat diproses. Silakan coba lagi."
+					)
 				);
 			}
 
@@ -125,7 +129,7 @@ export default function RegisterPage() {
 		<main className="relative flex min-h-screen w-full items-center justify-center bg-[#4A2920] px-5 py-10 max-[760px]:items-start">
 			<div className="absolute inset-0" aria-hidden="true">
 				<Image
-					src="/images/login.jpg"
+					src={blobAsset("/images/login.jpg")}
 					alt=""
 					fill
 					priority
@@ -140,7 +144,7 @@ export default function RegisterPage() {
 					<div className="flex h-14 items-center gap-3">
 						<div className="relative h-14 w-12 shrink-0 overflow-hidden">
 							<Image
-								src="/images/logo2.png"
+								src={blobAsset("/images/logo2.png")}
 								alt="Logo Kampung Budaya Polowijen"
 								fill
 								sizes="48px"

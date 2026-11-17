@@ -3,24 +3,25 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronDown, Compass, Menu, ShoppingBag, Star, X } from "lucide-react";
+import { blobAsset } from "@/lib/blob-assets";
 
 const slides = [
 	{
-		image: "/images/dashboard-topeng.jpg",
+		image: blobAsset("/images/dashboard-topeng.jpg"),
 		alt: "Pertunjukan Tari Topeng Malangan di Kampung Budaya Polowijen",
 		label: "Warisan Malang",
 		title: "Temukan cerita di balik setiap gerak.",
 		copy: "Kenali tradisi yang tumbuh dan dijaga bersama warga.",
 	},
 	{
-		image: "/images/dashboard-festival-kampung.jpeg",
+		image: blobAsset("/images/dashboard-festival-kampung.jpeg"),
 		alt: "Warga dan penari berkumpul di Kampung Budaya Polowijen",
 		label: "Ruang kebersamaan",
 		title: "Budaya hidup saat dirayakan bersama.",
 		copy: "Temui orang-orang dan kisah yang membuat Polowijen istimewa.",
 	},
 	{
-		image: "/images/dashboard-kupatan.png",
+		image: blobAsset("/images/dashboard-kupatan.png"),
 		alt: "Warga membuat anyaman ketupat bersama",
 		label: "Tradisi warga",
 		title: "Belajar tradisi langsung dari sumbernya.",
@@ -70,6 +71,7 @@ export default function UserDashboardPage() {
 			<Head>
 				<title>Beranda | Kampung Budaya Polowijen</title>
 				<meta name="description" content="Jelajahi cerita, kegiatan, dan karya warga Kampung Budaya Polowijen." />
+				<meta name="robots" content="noindex, nofollow" />
 			</Head>
 
 			<div className="mx-auto w-full max-w-[1240px] px-4 md:px-8">
@@ -156,7 +158,7 @@ export default function UserDashboardPage() {
 
 				<section id="komunitas" className="mt-10 grid items-center gap-6 border-t border-[#e5ded0] py-8 md:grid-cols-[0.85fr_1.15fr] md:gap-12 md:py-12">
 					<div className="relative aspect-[16/10] overflow-hidden rounded-[8px] bg-[#e9e2d4] md:aspect-[4/3]">
-						<Image src="/images/dashboard-kupatan.png" alt="Warga membuat anyaman ketupat bersama" fill sizes="(max-width: 768px) 100vw, 420px" className="object-cover" />
+						<Image src={blobAsset("/images/dashboard-kupatan.png")} alt="Warga membuat anyaman ketupat bersama" fill sizes="(max-width: 768px) 100vw, 420px" className="object-cover" />
 					</div>
 					<div className="max-w-[600px]">
 						<p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9b3d32]">Cerita dari kampung</p>

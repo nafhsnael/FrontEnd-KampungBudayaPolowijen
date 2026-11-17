@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { ArrowLeft, ChevronRight, Search } from "lucide-react";
+import { blobAsset } from "@/lib/blob-assets";
 
 type ViewMode = "home" | "grid" | "detail";
 
@@ -28,7 +29,7 @@ export default function CatalogHeaderSection({
     <section className="px-5 pt-8">
       <header className="flex items-center gap-3">
         <Image
-          src="/images/logo2.png"
+          src={blobAsset("/images/logo2.png")}
           alt="Logo Kampung Budaya Polowijen"
           width={48}
           height={48}
