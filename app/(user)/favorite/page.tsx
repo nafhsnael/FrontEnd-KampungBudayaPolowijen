@@ -1,4 +1,4 @@
-import FavoriteClient from "./FavoriteClient";
+import FavoriteSection from "./components/FavoriteSection";
 import { UMKM_PRODUCTS } from "@/data/umkm-products";
 import { createPageMetadata } from "@/lib/metadata";
 
@@ -10,5 +10,5 @@ export const metadata = createPageMetadata({
 });
 
 export default function FavoritePage() {
-  return <FavoriteClient products={UMKM_PRODUCTS} />;
+  return <FavoriteSection products={UMKM_PRODUCTS} />;
 }
