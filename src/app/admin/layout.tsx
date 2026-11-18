@@ -1,0 +1,17 @@
+"use client";
+
+import { ReactNode } from "react";
+import RouteGuard from "@/components/auth/RouteGuard";
+
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return (
+    <RouteGuard
+      requiredRole="admin"
+      loginPath="/admin/login"
+      mismatchPath="/dashboard"
+      bypassPaths={["/admin/login", "/admin/logout"]}
+    >
+      {children}
+    </RouteGuard>
+  );
+}
