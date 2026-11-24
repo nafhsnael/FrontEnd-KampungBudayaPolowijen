@@ -1,5 +1,5 @@
-import AdminPackageSection from "./components/AdminPackageSection";
+import VisitPackageTab from "./components/VisitPackageTab";
 
-export default function AdminPackagePage() {
-  return <AdminPackageSection />;
+export default function Page() {
+  return <VisitPackageTab />;
 }

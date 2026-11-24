@@ -31,6 +31,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body:has(.admin-panel-shell) {
+  height: auto;
+  min-height: 100vh;
+  background-color: #fff8ec;
+}
+
 /* ── Custom Animations ── */
 @keyframes fade-up {
   from {

@@ -138,7 +138,18 @@ export default function AdminSidebar() {
           <span>Keluar (Logout)</span>
         </button>
       </aside>
-      <div className="admin-sidebar-spacer" aria-hidden="true" />
+      <div
+        className="admin-sidebar-spacer"
+        aria-hidden="true"
+        style={{
+          alignSelf: "stretch",
+          backgroundColor: "#4A291F",
+          flex: "0 0 clamp(156px, 15vw, 234px)",
+          minHeight: "100vh",
+          minWidth: "clamp(156px, 15vw, 234px)",
+          width: "clamp(156px, 15vw, 234px)",
+        }}
+      />
 
       {logoutConfirmOpen && (
         <div
@@ -192,7 +203,7 @@ export default function AdminSidebar() {
         }
 
         .admin-sidebar { position:fixed; inset:0 auto 0 0; z-index:50; display:flex; flex-direction:column; width:clamp(156px,15vw,234px); height:100vh; height:100dvh; min-height:100vh; padding:30px 0; overflow-y:auto; background:#4A291F; }
-        .admin-sidebar-spacer { display:block; width:clamp(156px,15vw,234px); min-width:clamp(156px,15vw,234px); flex:0 0 clamp(156px,15vw,234px); }
+        .admin-sidebar-spacer { display:block; width:clamp(156px,15vw,234px); min-width:clamp(156px,15vw,234px); flex:0 0 clamp(156px,15vw,234px); background:#4A291F; }
 
         .sidebar-brand {
           display: flex;

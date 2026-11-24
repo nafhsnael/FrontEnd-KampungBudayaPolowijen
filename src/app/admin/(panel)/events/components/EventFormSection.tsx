@@ -145,7 +145,7 @@ export default function EventFormSection({
             />
             <span className="mt-1 block text-[10px] text-[#8C8178]">
               {posterFile
-                ? `${posterFile.name} akan diunggah ke Vercel Blob.`
+                ? `${posterFile.name} akan diunggah ke Cloudinary.`
                 : form.posterUrl
                   ? "Poster lama dipertahankan jika tidak memilih file baru."
                   : "Pilih file gambar dari perangkat (maksimal 5 MB)."}

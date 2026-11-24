@@ -38,6 +38,8 @@ export type RoutineScheduleRecord = {
   id: string;
   name: string;
   day: string;
+  startTime?: string;
+  endTime?: string;
   description: string;
   capacity: string;
   price: string;
@@ -140,13 +142,6 @@ async function requestData(
   return body.data;
 }
 
-function jsonRequest(method: "POST" | "PUT", data: unknown): RequestInit {
-  return {
-    method,
-    body: JSON.stringify(data),
-  };
-}
-
 function parseUmkm(value: unknown): UmkmRecord {
   const item = requireRecord(value, "Data UMKM dari server tidak valid.");
   return {
@@ -161,11 +156,12 @@ function parseUmkm(value: unknown): UmkmRecord {
 
 function parseEvent(value: unknown): EventRecord {
   const item = requireRecord(value, "Data event dari server tidak valid.");
+  const eventDate = text(item.eventDate);
   return {
     id: text(item.id),
     name: text(item.name),
     description: text(item.description),
-    eventDate: text(item.eventDate).slice(0, 10),
+    eventDate: eventDate.match(/^\d{4}-\d{2}-\d{2}/)?.[0] ?? eventDate,
     capacity: text(item.capacity),
     price: text(item.price),
     posterUrl: nullableText(item.posterUrl),
@@ -193,6 +189,8 @@ function parseRoutineSchedule(value: unknown): RoutineScheduleRecord {
     id: text(item.id),
     name: text(item.name),
     day: text(item.day),
+    startTime: text(item.startTime),
+    endTime: text(item.endTime),
     description: text(item.description),
     capacity: text(item.capacity),
     price: text(item.price),
@@ -285,22 +283,28 @@ export async function fetchPackageItems(): Promise<PackageRecord[]> {
 
 export async function savePackageItem(
   id: string | null,
-  data: CatalogFormData
-): Promise<void> {
-  const payload = {
-    name: data.name,
-    description: data.description,
-    duration: data.duration || null,
-    capacity: data.capacity || null,
-    price: Number(data.price),
-    imageUrl: data.imageUrl || null,
-    isActive: data.isActive ?? true,
-  };
-  await requestData(
+  data: CatalogFormData,
+  imageFile?: File | null
+): Promise<PackageRecord> {
+  const payload = new FormData();
+  payload.set("name", data.name);
+  payload.set("description", data.description);
+  payload.set("duration", data.duration || "");
+  payload.set("capacity", data.capacity || "");
+  payload.set("price", String(Number(data.price)));
+  payload.set("isActive", String(data.isActive ?? true));
+  if (imageFile) {
+    payload.set("image", imageFile);
+  } else if (data.imageUrl) {
+    payload.set("imageUrl", data.imageUrl);
+  }
+
+  const saved = await requestData(
     id ? `/api/admin/packages/${encodeURIComponent(id)}` : "/api/admin/packages",
-    jsonRequest(id ? "PUT" : "POST", payload),
+    { method: id ? "PUT" : "POST", body: payload },
     "Gagal menyimpan data paket."
   );
+  return parsePackage(saved);
 }
 
 export async function deletePackageItem(id: string): Promise<void> {
@@ -324,15 +328,31 @@ export async function fetchRoutineSchedules(): Promise<RoutineScheduleRecord[]> 
 
 export async function saveRoutineSchedule(
   id: string | null,
-  data: RoutineScheduleFormData
-): Promise<void> {
-  await requestData(
+  data: RoutineScheduleFormData,
+  imageFile?: File | null
+): Promise<RoutineScheduleRecord> {
+  const payload = new FormData();
+  payload.set("name", data.name);
+  payload.set("day", data.day);
+  payload.set("description", data.description);
+  payload.set("capacity", data.capacity);
+  payload.set("price", data.price);
+  if (data.startTime) payload.set("startTime", data.startTime);
+  if (data.endTime) payload.set("endTime", data.endTime);
+  if (imageFile) {
+    payload.set("image", imageFile);
+  } else if (data.imageUrl) {
+    payload.set("imageUrl", data.imageUrl);
+  }
+
+  const saved = await requestData(
     id
       ? `/api/admin/routine-schedules/${encodeURIComponent(id)}`
       : "/api/admin/routine-schedules",
-    jsonRequest(id ? "PUT" : "POST", data),
+    { method: id ? "PUT" : "POST", body: payload },
     "Gagal menyimpan jadwal rutin."
   );
+  return parseRoutineSchedule(saved);
 }
 
 export async function deleteRoutineSchedule(id: string): Promise<void> {

@@ -62,7 +62,7 @@ const SECTION_CONFIG: Record<
       { key: "name", label: "Nama event", type: "text", required: true },
       { key: "eventDate", label: "Tanggal kegiatan", type: "date", required: true },
       { key: "description", label: "Tentang kegiatan", type: "textarea" },
-      { key: "posterUrl", label: "URL gambar", type: "url" },
+      { key: "posterUrl", label: "Unggah poster", type: "file" },
       { key: "capacity", label: "Kuota", type: "text" },
       { key: "price", label: "Harga tiket", type: "text" },
       { key: "status", label: "Status", type: "status", required: true },
@@ -265,7 +265,7 @@ function CatalogManager({ section }: { section: CatalogSection }) {
           price: Number(data.price),
         }, imageFile);
       } else {
-        await saveEventItem(editing?.id ?? null, data);
+        await saveEventItem(editing?.id ?? null, data, imageFile);
       }
 
       setDialogOpen(false);
@@ -414,8 +414,8 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                       />
                       <span className="mt-1 block text-[8px] text-[#8C8178]">
                         {imageFile
-                          ? `${imageFile.name} akan diunggah ke Vercel Blob.`
-                          : form.imageUrl
+                          ? `${imageFile.name} akan diunggah ke Cloudinary.`
+                          : (field.key === "posterUrl" ? form.posterUrl : form.imageUrl)
                             ? "Gambar lama dipertahankan jika tidak memilih file baru."
                             : "Pilih gambar dari perangkat (maksimal 5 MB)."}
                       </span>
