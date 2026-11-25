@@ -39,7 +39,7 @@ type FormState = Record<FormKey, string>;
 type FieldDefinition = {
   key: FormKey;
   label: string;
-  type: "text" | "url" | "number" | "date" | "textarea" | "status" | "file";
+  type: "text" | "url" | "number" | "date" | "textarea" | "status" | "file" | "category";
   required?: boolean;
 };
 
@@ -51,7 +51,7 @@ const SECTION_CONFIG: Record<
     title: "UMKM",
     fields: [
       { key: "name", label: "Nama UMKM", type: "text", required: true },
-      { key: "category", label: "Jenis usaha", type: "text", required: true },
+      { key: "category", label: "Jenis usaha", type: "category", required: true },
       { key: "description", label: "Deskripsi", type: "textarea" },
       { key: "imageUrl", label: "Upload gambar (opsional)", type: "file" },
     ],
@@ -351,16 +351,16 @@ function CatalogManager({ section }: { section: CatalogSection }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="catalog-dialog-title"
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[#E6DCC9] bg-[#FFF9EF] p-4 shadow-[0_8px_30px_rgba(48,31,20,.2)]"
+            className="max-h-[92vh] w-full max-w-[360px] overflow-y-auto rounded-[12px] border border-[#E6DCC9] bg-[#FFF9EF] p-5 shadow-[0_12px_40px_rgba(48,31,20,.28)]"
           >
-            <header className="mb-3 flex items-start justify-between gap-3">
+            <header className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <p className="text-[7px] font-bold uppercase tracking-[0.12em] text-[#BD8660]">
+                <p className="text-[8px] font-bold uppercase tracking-[0.16em] text-[#BD8660]">
                   {section === "umkm" ? "DIREKTORI USAHA" : "AGENDA KEGIATAN"}
                 </p>
                 <h2
                   id="catalog-dialog-title"
-                  className="mt-0.5 text-[14px] font-bold text-[#4A291F]"
+                  className="mt-1 text-[16px] font-bold text-[#4A291F]"
                 >
                   {editing ? `Edit ${config.title}` : `Tambah ${config.title}`}
                 </h2>
@@ -370,9 +370,9 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                 onClick={() => setDialogOpen(false)}
                 disabled={saving}
                 aria-label="Tutup formulir"
-                className="rounded-full p-1 text-[#806B5C] hover:bg-[#F3E9DA]"
+                className="-mr-1 -mt-1 rounded-full p-1.5 text-[#806B5C] hover:bg-[#F3E9DA]"
               >
-                <X size={14} aria-hidden="true" />
+                <X size={16} aria-hidden="true" />
               </button>
             </header>
 
@@ -385,10 +385,10 @@ function CatalogManager({ section }: { section: CatalogSection }) {
               </p>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-2.5">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {config.fields.map((field) => (
                 <label key={field.key} className="block">
-                  <span className="mb-1 block text-[8px] text-[#75685F]">
+                  <span className="mb-1.5 block text-[9px] text-[#75685F]">
                     {field.label}
                   </span>
                   {field.type === "textarea" ? (
@@ -397,9 +397,9 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                       onChange={(event) =>
                         updateField(field.key, event.target.value)
                       }
-                      rows={3}
+                      rows={4}
                       required={field.required}
-                      className="w-full rounded-md border border-[#E2D9CB] bg-white px-2 py-1.5 text-[9px] text-[#4A342A] outline-none focus:border-[#C49A4A]"
+                      className="w-full resize-none rounded-md border border-[#E2D9CB] bg-white px-3 py-2 text-[10px] text-[#4A342A] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/10"
                     />
                   ) : field.type === "file" ? (
                     <>
@@ -410,7 +410,7 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                           setImageFile(event.target.files?.[0] ?? null);
                           setDialogError(null);
                         }}
-                        className="w-full rounded-md border border-[#E2D9CB] bg-white px-2 py-1.5 text-[9px] text-[#4A342A] file:mr-2 file:rounded file:border-0 file:bg-[#F3E9DA] file:px-2 file:py-1 file:text-[8px] file:text-[#4A342A]"
+                        className="h-9 w-full rounded-md border border-[#E2D9CB] bg-white px-2 py-1.5 text-[9px] text-[#4A342A] file:mr-2 file:rounded file:border-0 file:bg-[#F3E9DA] file:px-2 file:py-1 file:text-[8px] file:text-[#4A342A]"
                       />
                       <span className="mt-1 block text-[8px] text-[#8C8178]">
                         {imageFile
@@ -427,11 +427,25 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                         updateField(field.key, event.target.value)
                       }
                       required={field.required}
-                      className="h-7 w-full rounded-md border border-[#E2D9CB] bg-white px-2 text-[9px] text-[#4A342A] outline-none focus:border-[#C49A4A]"
+                      className="h-9 w-full rounded-md border border-[#E2D9CB] bg-white px-3 text-[10px] text-[#4A342A] outline-none focus:border-[#C49A4A]"
                     >
                       <option value="Upcoming">Upcoming</option>
                       <option value="Ongoing">Ongoing</option>
                       <option value="Completed">Completed</option>
+                    </select>
+                  ) : field.type === "category" ? (
+                    <select
+                      value={form[field.key]}
+                      onChange={(event) =>
+                        updateField(field.key, event.target.value)
+                      }
+                      required={field.required}
+                      className="h-9 w-full rounded-md border border-[#E2D9CB] bg-white px-3 text-[10px] text-[#4A342A] outline-none focus:border-[#C49A4A]"
+                    >
+                      <option value="">Pilih jenis usaha</option>
+                      <option value="Kriya">Kriya</option>
+                      <option value="Kuliner">Kuliner</option>
+                      <option value="Minuman">Minuman</option>
                     </select>
                   ) : (
                     <input
@@ -443,7 +457,7 @@ function CatalogManager({ section }: { section: CatalogSection }) {
                       required={field.required}
                       min={field.type === "number" ? "0" : undefined}
                       step={field.type === "number" ? "1" : undefined}
-                      className="h-7 w-full rounded-md border border-[#E2D9CB] bg-white px-2 text-[9px] text-[#4A342A] outline-none focus:border-[#C49A4A]"
+                      className="h-9 w-full rounded-md border border-[#E2D9CB] bg-white px-3 text-[10px] text-[#4A342A] outline-none focus:border-[#C49A4A] focus:ring-2 focus:ring-[#C49A4A]/10"
                     />
                   )}
                 </label>
@@ -452,7 +466,7 @@ function CatalogManager({ section }: { section: CatalogSection }) {
               <button
                 type="submit"
                 disabled={saving}
-                className="mt-1 inline-flex h-8 w-full items-center justify-center rounded-md bg-[#4A291F] text-[9px] font-semibold text-white hover:bg-[#633A2D] disabled:opacity-60"
+                className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-md bg-[#4A291F] text-[10px] font-semibold text-white hover:bg-[#633A2D] disabled:opacity-60"
               >
                 {saving
                   ? "Menyimpan..."
@@ -471,12 +485,12 @@ function CatalogManager({ section }: { section: CatalogSection }) {
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-title"
-            className="w-full max-w-sm rounded-xl border border-[#E6DCC9] bg-[#FFF9EF] p-5 shadow-[0_8px_30px_rgba(48,31,20,.2)]"
+            className="w-full max-w-[340px] rounded-[12px] border border-[#E6DCC9] bg-[#FFF9EF] p-5 shadow-[0_12px_40px_rgba(48,31,20,.28)]"
           >
-            <h2 id="delete-title" className="text-sm font-bold text-[#4A291F]">
+            <h2 id="delete-title" className="text-[17px] font-bold text-[#4A291F]">
               Hapus {section === "umkm" ? "UMKM" : "event"}?
             </h2>
-            <p className="mt-2 text-[10px] leading-relaxed text-[#82776D]">
+            <p className="mt-2 text-[11px] leading-relaxed text-[#82776D]">
               “{deleteTarget.name}” akan dihapus dari daftar. Tindakan ini tidak
               dapat dibatalkan.
             </p>
@@ -530,7 +544,7 @@ function UmkmView({
 }) {
   return (
     <>
-      <section className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-[#E6DDD0] bg-white px-4 py-6 shadow-[0_2px_8px_rgba(74,41,31,.06)] sm:px-5">
+      <section className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-[#E6DDD0] bg-white px-4 py-5 shadow-[0_2px_8px_rgba(74,41,31,.06)] sm:min-h-[86px] sm:px-5">
         <div className="min-w-[110px] border-r border-[#E7DED2] pr-5">
           <p className="text-[10px] text-[#8F8175]">UMKM Terdaftar</p>
           <p className="mt-1 text-2xl font-bold leading-none text-[#4A342A]">

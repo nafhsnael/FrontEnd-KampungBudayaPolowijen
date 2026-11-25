@@ -11,6 +11,7 @@ type EventFormState = {
   capacity: string;
   price: string;
   posterUrl: string;
+  status: string;
 };
 
 function makeFormState(event: EventRecord | null): EventFormState {
@@ -21,6 +22,7 @@ function makeFormState(event: EventRecord | null): EventFormState {
     capacity: event?.capacity ?? "",
     price: event?.price ?? "",
     posterUrl: event?.posterUrl ?? "",
+    status: event?.status ?? "Upcoming",
   };
 }
 
@@ -60,7 +62,7 @@ export default function EventFormSection({
     onSave(
       {
         ...form,
-        status: event?.status ?? "Upcoming",
+        status: form.status,
       },
       posterFile
     );
@@ -78,7 +80,7 @@ export default function EventFormSection({
         role="dialog"
         aria-modal="true"
         aria-labelledby="event-form-title"
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-[#E6DCC9] bg-[#FFF9EF] p-4 shadow-[0_8px_30px_rgba(48,31,20,.25)]"
+        className="max-h-[92vh] w-full max-w-[360px] overflow-y-auto rounded-[12px] border border-[#E6DCC9] bg-[#FFF9EF] p-5 shadow-[0_12px_40px_rgba(48,31,20,.28)]"
       >
         <header className="mb-4 flex items-center justify-between">
           <h2 id="event-form-title" className="text-base font-bold text-[#4A291F]">
@@ -172,6 +174,19 @@ export default function EventFormSection({
               />
             </label>
           </div>
+
+          <label className="block">
+            <span className="mb-1 block text-xs text-[#75685F]">Status event</span>
+            <select
+              value={form.status}
+              onChange={(eventChange) => updateField("status", eventChange.target.value)}
+              className="h-9 w-full rounded-md border border-[#E2D9CB] bg-white px-3 text-sm text-[#4A342A] outline-none focus:border-[#C49A4A]"
+            >
+              <option value="Upcoming">Upcoming</option>
+              <option value="Ongoing">Ongoing</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </label>
 
           <button
             type="submit"

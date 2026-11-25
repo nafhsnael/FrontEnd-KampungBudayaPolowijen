@@ -13,6 +13,7 @@ function safePosterStyle(posterUrl: string | null) {
 }
 
 function formatEventDate(value: string): string {
+  if (!value) return "Tanggal belum ditentukan";
   const date = new Date(`${value.slice(0, 10)}T00:00:00`);
   return Number.isNaN(date.getTime())
     ? value

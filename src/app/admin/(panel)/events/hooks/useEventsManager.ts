@@ -15,6 +15,8 @@ export default function useEventsManager() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EventRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -37,21 +39,14 @@ export default function useEventsManager() {
   }, [loadEvents]);
 
   const { nearestEvent, historyEvents } = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const upcoming = events
-      .filter(
-        (event) =>
-          event.status !== "Completed" &&
-          new Date(`${event.eventDate.slice(0, 10)}T00:00:00`) >= today
-      )
+    const nearestEvents = events
+      .filter((event) => event.status !== "Completed")
       .sort((left, right) => left.eventDate.localeCompare(right.eventDate));
-    const nearest = upcoming[0] ?? null;
 
     return {
-      nearestEvent: nearest,
+      nearestEvent: nearestEvents,
       historyEvents: events
-        .filter((event) => event.id !== nearest?.id)
+        .filter((event) => event.status === "Completed")
         .sort((left, right) => right.eventDate.localeCompare(left.eventDate)),
     };
   }, [events]);
@@ -76,7 +71,7 @@ export default function useEventsManager() {
         editingEvent?.id ?? null,
         {
           ...data,
-          status: editingEvent?.status ?? "Upcoming",
+          status: data.status ?? editingEvent?.status ?? "Upcoming",
         },
         posterFile
       );
@@ -92,10 +87,16 @@ export default function useEventsManager() {
   }
 
   async function removeEvent(event: EventRecord) {
-    if (!window.confirm(`Hapus event "${event.name}"?`)) return;
+    setDeleteTarget(event);
+  }
+
+  async function confirmDeleteEvent() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     setError(null);
     try {
-      await deleteEventItem(event.id);
+      await deleteEventItem(deleteTarget.id);
+      setDeleteTarget(null);
       await loadEvents();
     } catch (deleteError) {
       setError(
@@ -103,6 +104,9 @@ export default function useEventsManager() {
           ? deleteError.message
           : "Gagal menghapus event."
       );
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -115,10 +119,14 @@ export default function useEventsManager() {
     dialogError,
     formOpen,
     editingEvent,
+    deleteTarget,
+    deleting,
     openCreateForm,
     openEditForm,
     saveEvent,
     removeEvent,
+    confirmDeleteEvent,
+    cancelDeleteEvent: () => setDeleteTarget(null),
     closeForm: () => setFormOpen(false),
   };
 }
