@@ -18,7 +18,7 @@ export default function AgendaSection() {
         karya lokal yang lahir dari kreativitas kampung.
       </p>
       <Link
-        href="/user/umkm"
+        href="/umkm"
         className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-[#9b3d32] md:text-sm"
       >
         Lihat karya UMKM <ArrowRight size={16} />

@@ -17,7 +17,7 @@ const shortcuts = [
     label: "UMKM lokal",
     description: "Karya warga",
     icon: ShoppingBag,
-    href: "/user/umkm",
+    href: "/umkm",
     tone: "bg-[#f5e7d4] text-[#a85a35]",
   },
   {

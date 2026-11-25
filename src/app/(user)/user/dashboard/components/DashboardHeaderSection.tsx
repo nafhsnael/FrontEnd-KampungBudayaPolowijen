@@ -8,7 +8,7 @@ const navigation = [
   { label: "Beranda", href: "/user/dashboard" },
   { label: "Cerita kampung", href: "#komunitas" },
   { label: "Agenda", href: "#agenda" },
-  { label: "UMKM", href: "/user/umkm" },
+  { label: "UMKM", href: "/umkm" },
 ];
 
 export default function DashboardHeaderSection() {
