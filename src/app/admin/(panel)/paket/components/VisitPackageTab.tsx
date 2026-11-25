@@ -38,13 +38,11 @@ export default function VisitPackageTab() {
         })}
       </div>
 
-      {/* Keduanya tetap hidup di memori supaya state tidak hilang saat pindah tab */}
-      <div hidden={tab !== "paket"}>
+      {tab === "paket" ? (
         <AdminPackageSection />
-      </div>
-      <div hidden={tab !== "jadwal"}>
+      ) : (
         <AdminScheduleSection />
-      </div>
+      )}
     </section>
   );
 }
